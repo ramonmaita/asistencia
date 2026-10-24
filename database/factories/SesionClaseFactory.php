@@ -18,7 +18,7 @@ class SesionClaseFactory extends Factory
         return [
             'curso_id' => Curso::factory(),
             'pnf_id' => fn (array $attributes) => Curso::withoutGlobalScopes()->find($attributes['curso_id'])->pnf_id,
-            'fecha' => fake()->unique()->dateTimeBetween('-6 months', '-1 day')->format('Y-m-d'),
+            'fecha' => today()->subDays(fake()->unique()->numberBetween(1, 365))->toDateString(),
             'hora_inicio' => '08:00:00',
             'hora_fin' => '10:15:00',
             'estado' => EstadoSesion::Programada,
@@ -43,7 +43,7 @@ class SesionClaseFactory extends Factory
     public function futura(): static
     {
         return $this->state(fn (array $attributes) => [
-            'fecha' => fake()->unique()->dateTimeBetween('+1 day', '+6 months')->format('Y-m-d'),
+            'fecha' => today()->addDays(fake()->unique()->numberBetween(1, 365))->toDateString(),
         ]);
     }
 }

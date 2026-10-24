@@ -61,9 +61,14 @@ class Asistencia extends Model
      */
     public function puedeJustificarse(): bool
     {
-        return $this->estado === EstadoAsistencia::Ausente
-            && ! $this->justificaciones()
-                ->whereIn('estado', [EstadoJustificacion::Pendiente, EstadoJustificacion::Aprobada])
-                ->exists();
+        if ($this->estado !== EstadoAsistencia::Ausente) {
+            return false;
+        }
+
+        $vigentes = [EstadoJustificacion::Pendiente, EstadoJustificacion::Aprobada];
+
+        return $this->relationLoaded('justificaciones')
+            ? $this->justificaciones->whereIn('estado', $vigentes)->isEmpty()
+            : $this->justificaciones()->whereIn('estado', $vigentes)->doesntExist();
     }
 }

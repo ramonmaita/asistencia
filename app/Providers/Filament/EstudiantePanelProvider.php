@@ -35,6 +35,7 @@ class EstudiantePanelProvider extends PanelProvider
             ->authGuard('estudiante')
             ->login(Login::class)
             ->brandName('Gestión PNF · Estudiantes')
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Emerald,
             ])

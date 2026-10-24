@@ -38,6 +38,7 @@ class AppPanelProvider extends PanelProvider
             ->tenantMiddleware([
                 EstablecerPnfDelPanel::class,
             ], isPersistent: true)
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Blue,
             ])

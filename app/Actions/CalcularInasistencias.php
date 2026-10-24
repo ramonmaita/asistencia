@@ -8,6 +8,7 @@ use App\Models\Asistencia;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\SesionClase;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 /**
@@ -28,7 +29,7 @@ class CalcularInasistencias
         $umbral = (float) $curso->pnf->umbral_inasistencia_clases;
 
         $estudiantes = $soloEstudiante
-            ? collect([$soloEstudiante])
+            ? new EloquentCollection([$soloEstudiante])
             : $curso->estudiantes()->orderBy('apellidos')->orderBy('nombres')->get();
 
         $conteos = Asistencia::query()
