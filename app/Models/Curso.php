@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * Unidad curricular dictada en una sección: tiene docentes y horario,
@@ -40,6 +41,38 @@ class Curso extends Model
     public function horarios(): HasMany
     {
         return $this->hasMany(Horario::class)->orderBy('dia_semana')->orderBy('hora_inicio');
+    }
+
+    public function sesiones(): HasMany
+    {
+        return $this->hasMany(SesionClase::class);
+    }
+
+    /**
+     * Estudiantes inscritos en la sección del curso.
+     */
+    public function estudiantes(): BelongsToMany
+    {
+        return $this->belongsToMany(Estudiante::class, 'estudiante_seccion', 'seccion_id', 'estudiante_id', 'seccion_id');
+    }
+
+    /**
+     * Asistencias a las sesiones de clase del curso (no incluye tutorías).
+     */
+    public function asistencias(): HasManyThrough
+    {
+        return $this->hasManyThrough(Asistencia::class, SesionClase::class, 'curso_id', 'sesionable_id')
+            ->where('asistencias.sesionable_type', (new SesionClase)->getMorphClass());
+    }
+
+    public function scopeDelPeriodoActivo(Builder $query): void
+    {
+        $query->whereHas('seccion.periodo', fn (Builder $periodos) => $periodos->where('activo', true));
+    }
+
+    public function scopeCursadosPor(Builder $query, Estudiante $estudiante): void
+    {
+        $query->whereHas('seccion.estudiantes', fn (Builder $estudiantes) => $estudiantes->whereKey($estudiante->getKey()));
     }
 
     public function scopeDictadosPor(Builder $query, User $docente): void

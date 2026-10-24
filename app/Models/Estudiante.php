@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
@@ -89,6 +90,16 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
     public function secciones(): BelongsToMany
     {
         return $this->belongsToMany(Seccion::class)->withTimestamps();
+    }
+
+    public function asistencias(): HasMany
+    {
+        return $this->hasMany(Asistencia::class);
+    }
+
+    public function justificaciones(): HasMany
+    {
+        return $this->hasMany(Justificacion::class);
     }
 
     public function getNombreCompletoAttribute(): string

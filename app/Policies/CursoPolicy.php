@@ -22,4 +22,9 @@ class CursoPolicy extends GestionadaPorCoordinador
         return $this->coordinaPnfDe($user, $curso)
             || ($curso->pnf_id === app(PnfActual::class)->id() && $curso->docentes()->whereKey($user->getKey())->exists());
     }
+
+    public function generarSesiones(User $user, Model $curso): bool
+    {
+        return $this->coordinaPnfDe($user, $curso);
+    }
 }

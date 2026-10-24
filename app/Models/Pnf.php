@@ -87,4 +87,9 @@ class Pnf extends Model implements HasName
     {
         return $this->hasMany(Curso::class);
     }
+
+    public function justificaciones(): HasMany
+    {
+        return $this->hasMany(Justificacion::class);
+    }
 }
