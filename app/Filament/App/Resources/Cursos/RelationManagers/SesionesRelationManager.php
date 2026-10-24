@@ -29,6 +29,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Sesiones de clase del curso: desde aquí el docente registra la asistencia.
@@ -64,9 +65,13 @@ class SesionesRelationManager extends RelationManager
                 DatePicker::make('fecha')
                     ->required()
                     ->rule(fn (Get $get, ?SesionClase $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
+                        if (blank($get('hora_inicio'))) {
+                            return;
+                        }
+
                         $repetida = $this->getOwnerRecord()->sesiones()
                             ->whereDate('fecha', $value)
-                            ->whereTime('hora_inicio', $get('hora_inicio') ?? '')
+                            ->whereTime('hora_inicio', Carbon::parse($get('hora_inicio'))->format('H:i:s'))
                             ->when($record, fn (Builder $query) => $query->whereKeyNot($record->getKey()))
                             ->exists();
 

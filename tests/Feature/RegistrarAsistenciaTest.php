@@ -205,6 +205,24 @@ class RegistrarAsistenciaTest extends TestCase
         $this->assertDatabaseHas('sesiones_clase', ['curso_id' => $curso->id, 'tipo' => 'extra', 'pnf_id' => $pnf->id]);
     }
 
+    public function test_rechaza_una_sesion_extra_repetida(): void
+    {
+        [$pnf, $curso, $docente] = $this->cursoConDocente();
+        SesionClase::factory()->for($curso)->create(['fecha' => '2026-10-24', 'hora_inicio' => '08:00:00']);
+
+        $this->entrarAlPanel($docente, $pnf);
+
+        Livewire::test(SesionesRelationManager::class, ['ownerRecord' => $curso, 'pageClass' => ViewCurso::class])
+            ->callAction(TestAction::make('create')->table(), data: [
+                'fecha' => '2026-10-24',
+                'hora_inicio' => '08:00',
+                'hora_fin' => '10:00',
+            ])
+            ->assertHasFormErrors(['fecha']);
+
+        $this->assertSame(1, $curso->sesiones()->count());
+    }
+
     public function test_el_tablero_muestra_las_clases_de_hoy_del_docente(): void
     {
         [$pnf, $curso, $docente] = $this->cursoConDocente();

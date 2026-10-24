@@ -15,7 +15,8 @@ return new class extends Migration
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pnf_id')->constrained()->restrictOnDelete();
-            $table->morphs('sesionable');
+            $table->string('sesionable_type');
+            $table->unsignedBigInteger('sesionable_id');
             $table->foreignId('estudiante_id')->constrained()->cascadeOnDelete();
             $table->string('estado', 20);
             $table->string('metodo', 20)->default('manual');
