@@ -18,6 +18,11 @@ class EstudiantesRelationManager extends RelationManager
 {
     protected static string $relationship = 'estudiantes';
 
+    /**
+     * Filament adivinaría "seccions"; la relación en Estudiante es "secciones".
+     */
+    protected static ?string $inverseRelationship = 'secciones';
+
     protected static ?string $title = 'Estudiantes inscritos';
 
     protected static ?string $modelLabel = 'estudiante';
@@ -40,6 +45,10 @@ class EstudiantesRelationManager extends RelationManager
             ->headerActions([
                 AttachAction::make()
                     ->label('Inscribir estudiantes')
+                    ->modalHeading('Inscribir estudiantes')
+                    ->modalSubmitActionLabel('Inscribir')
+                    ->attachAnother(false)
+                    ->successNotificationTitle('Estudiantes inscritos')
                     ->multiple()
                     ->recordSelectSearchColumns(['cedula', 'nombres', 'apellidos']),
             ])

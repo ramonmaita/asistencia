@@ -6,6 +6,8 @@ use App\Enums\ModalidadProyecto;
 use App\Filament\App\Resources\Cursos\Pages\CreateCurso;
 use App\Filament\App\Resources\Cursos\Pages\ListCursos;
 use App\Filament\App\Resources\Estudiantes\Pages\ListEstudiantes;
+use App\Filament\App\Resources\Seccions\Pages\EditSeccion;
+use App\Filament\App\Resources\Seccions\RelationManagers\EstudiantesRelationManager;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Pnf;
@@ -14,6 +16,7 @@ use App\Models\Trayecto;
 use App\Models\UnidadCurricular;
 use App\Models\User;
 use App\Support\PnfActual;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -127,6 +130,55 @@ class PanelAcademicoTest extends TestCase
             ->assertHasFormErrors(['unidad_curricular_id']);
 
         $this->assertSame(0, Curso::count());
+    }
+
+    public function test_la_busqueda_para_inscribir_ofrece_solo_estudiantes_del_pnf_no_inscritos(): void
+    {
+        $pnf = Pnf::factory()->create();
+        $seccion = Seccion::factory()->for(Trayecto::factory()->for($pnf))->create();
+        $disponible = Estudiante::factory()->for($pnf)->create(['apellidos' => 'Pérez']);
+        $yaInscrito = Estudiante::factory()->for($pnf)->create(['apellidos' => 'Pérez']);
+        $seccion->estudiantes()->attach($yaInscrito);
+        Estudiante::factory()->create(['apellidos' => 'Pérez']);
+
+        $this->entrarAlPanel(User::factory()->coordinadorDe($pnf)->create(), $pnf);
+
+        $resultados = Livewire::test(EstudiantesRelationManager::class, ['ownerRecord' => $seccion, 'pageClass' => EditSeccion::class])
+            ->mountAction(TestAction::make('attach')->table())
+            ->call('callSchemaComponentMethod', 'mountedActionSchema0.recordId', 'getSearchResultsForJs', ['search' => 'Pérez'])
+            ->effects['returns'][0];
+
+        $this->assertEquals([$disponible->id], array_column($resultados, 'value'));
+    }
+
+    public function test_inscribe_al_estudiante_del_pnf(): void
+    {
+        $pnf = Pnf::factory()->create();
+        $seccion = Seccion::factory()->for(Trayecto::factory()->for($pnf))->create();
+        $estudiante = Estudiante::factory()->for($pnf)->create();
+
+        $this->entrarAlPanel(User::factory()->coordinadorDe($pnf)->create(), $pnf);
+
+        Livewire::test(EstudiantesRelationManager::class, ['ownerRecord' => $seccion, 'pageClass' => EditSeccion::class])
+            ->callAction(TestAction::make('attach')->table(), data: ['recordId' => [$estudiante->id]])
+            ->assertHasNoFormErrors();
+
+        $this->assertSame([$estudiante->id], $seccion->estudiantes()->pluck('estudiantes.id')->all());
+    }
+
+    public function test_rechaza_inscribir_a_un_estudiante_de_otro_pnf(): void
+    {
+        $pnf = Pnf::factory()->create();
+        $seccion = Seccion::factory()->for(Trayecto::factory()->for($pnf))->create();
+        $deOtroPnf = Estudiante::factory()->create();
+
+        $this->entrarAlPanel(User::factory()->coordinadorDe($pnf)->create(), $pnf);
+
+        Livewire::test(EstudiantesRelationManager::class, ['ownerRecord' => $seccion, 'pageClass' => EditSeccion::class])
+            ->callAction(TestAction::make('attach')->table(), data: ['recordId' => [$deOtroPnf->id]])
+            ->assertHasFormErrors(['recordId.0']);
+
+        $this->assertSame(0, $seccion->estudiantes()->count());
     }
 
     public function test_el_trayecto_individual_fija_un_integrante(): void
