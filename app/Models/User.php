@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\RolPnf;
+use App\Support\PnfActual;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
@@ -50,6 +51,26 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             ->using(PnfUser::class)
             ->withPivot('rol')
             ->withTimestamps();
+    }
+
+    public function cursos(): BelongsToMany
+    {
+        return $this->belongsToMany(Curso::class)->withTimestamps();
+    }
+
+    /**
+     * Indica si coordina el PNF de la petición en curso (o es superadmin).
+     */
+    public function coordinaPnfActual(): bool
+    {
+        $pnfId = app(PnfActual::class)->id();
+
+        if ($this->is_superadmin) {
+            return true;
+        }
+
+        return $pnfId !== null
+            && $this->pnfs->firstWhere('id', $pnfId)?->pivot->rol === RolPnf::Coordinador;
     }
 
     public function rolEn(Pnf $pnf): ?RolPnf

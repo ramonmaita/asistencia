@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\RolPnf;
+use App\Models\Pnf;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +34,16 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function coordinadorDe(Pnf $pnf): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->pnfs()->attach($pnf, ['rol' => RolPnf::Coordinador]));
+    }
+
+    public function docenteDe(Pnf $pnf): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->pnfs()->attach($pnf, ['rol' => RolPnf::Docente]));
     }
 
     public function superadmin(): static

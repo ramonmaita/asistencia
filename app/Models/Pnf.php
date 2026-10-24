@@ -67,4 +67,24 @@ class Pnf extends Model implements HasName
     {
         return $this->hasMany(Estudiante::class);
     }
+
+    public function trayectos(): HasMany
+    {
+        return $this->hasMany(Trayecto::class);
+    }
+
+    public function unidadesCurriculares(): HasMany
+    {
+        return $this->hasMany(UnidadCurricular::class);
+    }
+
+    public function secciones(): HasMany
+    {
+        return $this->hasMany(Seccion::class);
+    }
+
+    public function cursos(): HasMany
+    {
+        return $this->hasMany(Curso::class);
+    }
 }

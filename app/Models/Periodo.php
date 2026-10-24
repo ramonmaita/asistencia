@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use Database\Factories\PeriodoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['nombre', 'fecha_inicio', 'fecha_fin', 'activo'])]
 class Periodo extends Model
 {
+    /** @use HasFactory<PeriodoFactory> */
+    use HasFactory;
+
     protected static function booted(): void
     {
         // Solo puede haber un periodo activo a la vez.

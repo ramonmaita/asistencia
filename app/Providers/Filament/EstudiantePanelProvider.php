@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Estudiante\Pages\Auth\Login;
 use App\Http\Middleware\EstablecerPnfDelEstudiante;
+use App\Http\Middleware\ExigirCambioDeContrasena;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -60,6 +61,7 @@ class EstudiantePanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 EstablecerPnfDelEstudiante::class,
+                ExigirCambioDeContrasena::class,
             ]);
     }
 }

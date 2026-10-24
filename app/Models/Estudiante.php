@@ -10,8 +10,10 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 #[Fillable(['pnf_id', 'cedula', 'nombres', 'apellidos', 'email', 'telefono', 'password', 'debe_cambiar_password', 'activo'])]
@@ -30,7 +32,49 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
     {
         static::creating(function (Estudiante $estudiante) {
             $estudiante->qr_token ??= (string) Str::uuid();
+
+            if (blank($estudiante->password)) {
+                $estudiante->password = static::hashContrasenaInicial($estudiante->cedula);
+                $estudiante->debe_cambiar_password = true;
+            }
         });
+    }
+
+    /**
+     * Vuelve la contraseña a la cédula y obliga a cambiarla en el próximo ingreso.
+     */
+    public function restablecerContrasena(): void
+    {
+        $this->forceFill([
+            'password' => static::hashContrasenaInicial($this->cedula),
+            'debe_cambiar_password' => true,
+        ])->save();
+    }
+
+    /**
+     * La contraseña inicial (la cédula) es temporal, así que se cifra con menos
+     * rondas para que importar cientos de estudiantes no tarde minutos.
+     * Laravel la vuelve a cifrar con el costo normal al iniciar sesión.
+     */
+    private static function hashContrasenaInicial(string $cedula): string
+    {
+        return Hash::make($cedula, ['rounds' => min(10, (int) config('hashing.bcrypt.rounds', 12))]);
+    }
+
+    /**
+     * Texto codificado en el QR del carnet.
+     */
+    public function contenidoQr(): string
+    {
+        return "GPNF:{$this->qr_token}";
+    }
+
+    /**
+     * Invalida el QR anterior (p. ej. por pérdida del carnet).
+     */
+    public function regenerarQr(): void
+    {
+        $this->forceFill(['qr_token' => (string) Str::uuid()])->save();
     }
 
     protected function casts(): array
@@ -40,6 +84,11 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
             'debe_cambiar_password' => 'boolean',
             'activo' => 'boolean',
         ];
+    }
+
+    public function secciones(): BelongsToMany
+    {
+        return $this->belongsToMany(Seccion::class)->withTimestamps();
     }
 
     public function getNombreCompletoAttribute(): string
