@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DiaSemana;
 use App\Enums\EstadoSesion;
 use App\Enums\TipoSesion;
 use App\Models\Concerns\BelongsToPnf;
@@ -65,7 +66,7 @@ class SesionClase extends Model implements Sesionable
 
     public function descripcion(): string
     {
-        return "{$this->curso->unidadCurricular->nombre} · {$this->fecha->format('d/m/Y')} {$this->horario()}";
+        return "{$this->curso->unidadCurricular->nombre} · {$this->fechaLarga()} {$this->horario()}";
     }
 
     /**
@@ -74,6 +75,14 @@ class SesionClase extends Model implements Sesionable
     public function horario(): string
     {
         return substr($this->hora_inicio, 0, 5).'–'.substr($this->hora_fin, 0, 5);
+    }
+
+    /**
+     * Fecha con el día de la semana, p. ej. "Lunes 12/10/2026".
+     */
+    public function fechaLarga(): string
+    {
+        return DiaSemana::from($this->fecha->dayOfWeekIso)->getLabel().' '.$this->fecha->format('d/m/Y');
     }
 
     public function yaOcurrio(): bool
