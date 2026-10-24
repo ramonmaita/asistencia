@@ -7,6 +7,7 @@ use App\Filament\App\Resources\Cursos\Pages\EditCurso;
 use App\Filament\App\Resources\Cursos\Pages\ListCursos;
 use App\Filament\App\Resources\Cursos\Pages\RegistrarAsistencia;
 use App\Filament\App\Resources\Cursos\Pages\ViewCurso;
+use App\Filament\App\Resources\Cursos\RelationManagers\ResumenAsistenciaRelationManager;
 use App\Filament\App\Resources\Cursos\RelationManagers\SesionesRelationManager;
 use App\Filament\App\Resources\Cursos\Schemas\CursoForm;
 use App\Filament\App\Resources\Cursos\Tables\CursosTable;
@@ -64,6 +65,7 @@ class CursoResource extends Resource
     {
         return [
             SesionesRelationManager::class,
+            ResumenAsistenciaRelationManager::class,
         ];
     }
 
