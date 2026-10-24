@@ -9,6 +9,7 @@ use App\Filament\App\Resources\Cursos\Pages\ListCursos;
 use App\Filament\App\Resources\Cursos\Pages\RegistrarAsistencia;
 use App\Filament\App\Resources\Cursos\Pages\ViewCurso;
 use App\Filament\App\Resources\Cursos\RelationManagers\SesionesRelationManager;
+use App\Filament\App\Widgets\ClasesDeHoy;
 use App\Models\Asistencia;
 use App\Models\Curso;
 use App\Models\Estudiante;
@@ -202,6 +203,20 @@ class RegistrarAsistenciaTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas('sesiones_clase', ['curso_id' => $curso->id, 'tipo' => 'extra', 'pnf_id' => $pnf->id]);
+    }
+
+    public function test_el_tablero_muestra_las_clases_de_hoy_del_docente(): void
+    {
+        [$pnf, $curso, $docente] = $this->cursoConDocente();
+        $deHoy = SesionClase::factory()->for($curso)->create(['fecha' => '2026-10-20']);
+        $deAyer = SesionClase::factory()->for($curso)->create(['fecha' => '2026-10-19']);
+        $deOtroDocente = SesionClase::factory()->for(Curso::factory()->for($curso->seccion))->create(['fecha' => '2026-10-20']);
+
+        $this->entrarAlPanel($docente, $pnf);
+
+        Livewire::test(ClasesDeHoy::class)
+            ->assertCanSeeTableRecords([$deHoy])
+            ->assertCanNotSeeTableRecords([$deAyer, $deOtroDocente]);
     }
 
     /**
