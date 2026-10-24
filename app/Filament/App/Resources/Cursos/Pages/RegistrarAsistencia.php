@@ -76,7 +76,7 @@ class RegistrarAsistencia extends Page
     {
         $sesion = $this->sesionClase;
 
-        return "Sección {$this->getCurso()->seccion->codigo} · {$sesion->fechaLarga()} · {$sesion->horario()}";
+        return "{$this->getCurso()->seccion->codigo} · {$sesion->fechaLarga()} · {$sesion->horario()}";
     }
 
     /**
@@ -112,7 +112,8 @@ class RegistrarAsistencia extends Page
                             ->options(EstadoAsistencia::class)
                             ->inline()
                             ->grouped()
-                            ->required())
+                            ->required()
+                            ->markAsRequired(false))
                         ->all()),
                 Textarea::make('observacion')
                     ->label('Observación de la clase')

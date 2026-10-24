@@ -81,7 +81,7 @@ class AuditoriaAsistencias extends Page implements HasTable
                     ->sortable(),
                 TextColumn::make('sesionable.curso.unidadCurricular.nombre')
                     ->label('Curso')
-                    ->description(fn (Asistencia $record): string => 'Sección '.$record->sesionable->curso->seccion->codigo),
+                    ->description(fn (Asistencia $record): string => $record->sesionable->curso->seccion->codigo),
                 TextColumn::make('estudiante.nombre_completo')
                     ->label('Estudiante')
                     ->description(fn (Asistencia $record): string => $record->estudiante->cedula)

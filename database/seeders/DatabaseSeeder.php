@@ -2,22 +2,29 @@
 
 namespace Database\Seeders;
 
+use App\Actions\GenerarSesionesClase;
+use App\Actions\RegistrarAsistencias;
 use App\Enums\DiaSemana;
+use App\Enums\EstadoAsistencia;
 use App\Enums\ModalidadProyecto;
 use App\Enums\RolPnf;
 use App\Enums\Turno;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Feriado;
+use App\Models\Justificacion;
 use App\Models\Periodo;
 use App\Models\Pnf;
 use App\Models\Seccion;
 use App\Models\Sede;
+use App\Models\SesionClase;
 use App\Models\Trayecto;
 use App\Models\UnidadCurricular;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Datos de prueba para desarrollo local.
@@ -87,6 +94,57 @@ class DatabaseSeeder extends Seeder
 
         $this->crearPlanDeEstudios($administracion, $periodo, $docente, $estudiantesAdministracion, [
             'Trayecto I' => [['PNFA-CON', 'Contabilidad'], ['PNFA-PRO1', 'Proyecto Socio Integrador I', true]],
+        ]);
+
+        $this->registrarAsistencias($docente, $maria);
+    }
+
+    /**
+     * Genera las sesiones de todos los cursos y registra la asistencia de las
+     * clases ya ocurridas (hasta ayer). María falta a una de cada tres clases
+     * de Matemática, así que supera el umbral, y tiene una justificación pendiente.
+     */
+    private function registrarAsistencias(User $docente, Estudiante $maria): void
+    {
+        $registrar = app(RegistrarAsistencias::class);
+
+        foreach (Curso::with(['unidadCurricular', 'estudiantes'])->get() as $curso) {
+            app(GenerarSesionesClase::class)->handle($curso);
+
+            $curso->sesiones()
+                ->whereDate('fecha', '<', today())
+                ->orderBy('fecha')
+                ->get()
+                ->each(function (SesionClase $sesion, int $numero) use ($curso, $docente, $maria, $registrar): void {
+                    $estados = $curso->estudiantes->mapWithKeys(fn (Estudiante $estudiante): array => [
+                        $estudiante->id => match (true) {
+                            $estudiante->is($maria) => $curso->unidadCurricular->codigo === 'PNFI-MAT' && $numero % 3 === 0
+                                ? EstadoAsistencia::Ausente
+                                : EstadoAsistencia::Presente,
+                            fake()->boolean(8) => EstadoAsistencia::Ausente,
+                            fake()->boolean(6) => EstadoAsistencia::Tardanza,
+                            default => EstadoAsistencia::Presente,
+                        },
+                    ]);
+
+                    $registrar->handle($sesion, $estados->all(), $docente);
+                });
+        }
+
+        $ausencia = $maria->asistencias()->where('estado', EstadoAsistencia::Ausente)->latest('id')->first();
+
+        Storage::disk(Justificacion::DISCO)->put(
+            Justificacion::DIRECTORIO.'/ejemplo-constancia.pdf',
+            Pdf::loadHTML('<p>Constancia médica de ejemplo.</p>')->output(),
+        );
+
+        Justificacion::create([
+            'pnf_id' => $maria->pnf_id,
+            'asistencia_id' => $ausencia->id,
+            'estudiante_id' => $maria->id,
+            'motivo' => 'Cita médica en el ambulatorio.',
+            'soporte_path' => Justificacion::DIRECTORIO.'/ejemplo-constancia.pdf',
+            'soporte_nombre' => 'constancia.pdf',
         ]);
     }
 
