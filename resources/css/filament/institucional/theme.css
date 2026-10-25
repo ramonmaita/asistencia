@@ -1,6 +1,7 @@
 /*
- * Tema de los paneles de administración y académico: barra lateral azul
- * marino de alto completo con acento ámbar en el elemento activo.
+ * Tema de los paneles de administración y académico: barra lateral de alto
+ * completo con el degradado de la transición y acento amarillo en el
+ * elemento activo.
  */
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 @import '../marca.css';
@@ -9,14 +10,15 @@
 @source '../../../../app/Filament/App/**/*';
 @source '../../../../resources/views/filament/**/*';
 
+/* La barra lateral recorre la transición: del azul petróleo al casi negro. */
 .fi-sidebar {
-    @apply bg-(--gpnf-marino) lg:bg-(--gpnf-marino) dark:bg-gray-900 dark:lg:bg-gray-900;
+    @apply bg-(--gpnf-marino) bg-(image:--gpnf-degradado) lg:bg-(--gpnf-marino) dark:bg-gray-900 dark:bg-none dark:lg:bg-gray-900;
 }
 
 :not(.fi-body-has-topbar) .fi-sidebar-header {
     @apply relative border-b border-white/10;
 
-    /* Franja tricolor como la del logo */
+    /* Franja con los azules del logo */
     &::before {
         @apply absolute inset-x-0 top-0 h-1 bg-(image:--gpnf-franja) content-[''];
     }

@@ -1,6 +1,6 @@
 /*
- * Tema del panel del estudiante: más cercano y colorido, con navegación
- * superior sobre una franja azul y turquesa, y tarjetas más redondeadas.
+ * Tema del panel del estudiante: más cercano, con navegación superior sobre
+ * la transición de azules del logo (en horizontal) y tarjetas más redondeadas.
  */
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 @import '../marca.css';
@@ -8,16 +8,12 @@
 @source '../../../../app/Filament/Estudiante/**/*';
 @source '../../../../resources/views/filament/**/*';
 
-:root {
-    --gpnf-turquesa: #13799f;
-}
-
-.fi-topbar-ctn {
-    @apply border-t-4 border-(--gpnf-ambar);
+.fi-topbar-ctn::before {
+    @apply block h-1 bg-(image:--gpnf-franja) content-[''];
 }
 
 .fi-topbar {
-    @apply bg-(--gpnf-marino) bg-[linear-gradient(100deg,var(--gpnf-marino)_0%,var(--gpnf-marino-claro)_55%,var(--gpnf-turquesa)_100%)] shadow-md ring-0 dark:bg-gray-900 dark:bg-none;
+    @apply bg-(--gpnf-marino) bg-[linear-gradient(100deg,var(--gpnf-transicion-2)_0%,var(--gpnf-transicion-3)_30%,var(--gpnf-transicion-5)_65%,var(--gpnf-transicion-7)_100%)] shadow-md ring-0 dark:bg-gray-900 dark:bg-none;
 
     & .fi-logo {
         @apply text-white;

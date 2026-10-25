@@ -47,7 +47,7 @@ class AppPanelProvider extends PanelProvider
             ], isPersistent: true)
             ->databaseNotifications()
             ->colors([
-                'primary' => Marca::MARINO,
+                'primary' => Marca::TRANSICION,
                 'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')

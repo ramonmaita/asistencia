@@ -1,16 +1,32 @@
 /*
  * Identidad visual compartida por los tres paneles, tomada del logo de la
- * UPT Estado Bolívar (azul de la "P", amarillo y rojo). Si cambian los
- * colores, actualizar también App\Support\Marca.
+ * UPT Estado Bolívar: los azules de las franjas junto al puente, que van del
+ * celeste al azul petróleo casi negro y representan la transición y
+ * transformación de la universidad; el amarillo del logo es el acento.
+ * Si cambian los colores, actualizar también App\Support\Marca.
  */
 :root {
-    --gpnf-marino: #0b1260;
-    --gpnf-marino-medio: #141f86;
-    --gpnf-marino-claro: #2433b5;
+    /* Franjas del logo, de arriba (claro) a abajo (oscuro). */
+    --gpnf-transicion-1: #2992b5;
+    --gpnf-transicion-2: #1a88b8;
+    --gpnf-transicion-3: #0b7098;
+    --gpnf-transicion-4: #126389;
+    --gpnf-transicion-5: #084362;
+    --gpnf-transicion-6: #023852;
+    --gpnf-transicion-7: #0f2b35;
+
+    --gpnf-marino: var(--gpnf-transicion-5);
+    --gpnf-marino-medio: var(--gpnf-transicion-3);
+    --gpnf-marino-claro: var(--gpnf-transicion-2);
     --gpnf-ambar: #ffd21f;
-    --gpnf-rojo: #e30613;
-    --gpnf-fondo: #f4f5f9;
-    --gpnf-franja: linear-gradient(90deg, var(--gpnf-ambar) 0 33.3%, var(--gpnf-marino-claro) 33.3% 66.6%, var(--gpnf-rojo) 66.6% 100%);
+    --gpnf-fondo: #f2f6f8;
+
+    /* Degradado de la transición (vertical) y franja de colores (horizontal). */
+    --gpnf-degradado: linear-gradient(180deg, var(--gpnf-transicion-3) 0%, var(--gpnf-transicion-5) 45%, var(--gpnf-transicion-6) 75%, var(--gpnf-transicion-7) 100%);
+    --gpnf-franja: linear-gradient(90deg, var(--gpnf-transicion-1) 0 14.3%, var(--gpnf-transicion-2) 14.3% 28.6%, var(--gpnf-transicion-3) 28.6% 42.9%, var(--gpnf-transicion-4) 42.9% 57.2%, var(--gpnf-transicion-5) 57.2% 71.5%, var(--gpnf-transicion-6) 71.5% 85.8%, var(--gpnf-transicion-7) 85.8% 100%);
+
+    /* Líneas horizontales como las del logo, para superponer a un fondo. */
+    --gpnf-lineas: repeating-linear-gradient(180deg, transparent 0 18px, rgb(255 255 255 / 0.07) 18px 22px);
 }
 
 /* Logotipo: insignia sobre fondo blanco (el logo no es transparente) y nombre. */
@@ -79,9 +95,10 @@
     @apply bg-slate-50 text-xs font-semibold tracking-wide text-slate-600 uppercase dark:bg-white/5 dark:text-gray-300;
 }
 
-/* Pantallas de acceso: fondo azul con una franja ámbar y tarjeta blanca. */
+/* Pantallas de acceso: degradado de la transición con las líneas del logo. */
 .fi-simple-layout {
-    @apply bg-(--gpnf-marino) bg-[radial-gradient(ellipse_at_top,var(--gpnf-marino-claro),var(--gpnf-marino)_60%)];
+    background-color: var(--gpnf-marino);
+    background-image: var(--gpnf-lineas), var(--gpnf-degradado);
 }
 
 .fi-simple-main {

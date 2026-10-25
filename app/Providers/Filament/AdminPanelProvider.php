@@ -39,7 +39,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/institucional/theme.css')
             ->topbar(false)
             ->colors([
-                'primary' => Marca::MARINO,
+                'primary' => Marca::TRANSICION,
                 'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')

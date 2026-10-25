@@ -44,7 +44,7 @@ class EstudiantePanelProvider extends PanelProvider
             ->topNavigation()
             ->databaseNotifications()
             ->colors([
-                'primary' => Marca::TURQUESA,
+                'primary' => Marca::TRANSICION,
                 'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Estudiante/Resources'), for: 'App\Filament\Estudiante\Resources')
