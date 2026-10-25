@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Cursos;
 use App\Filament\App\Resources\Cursos\Pages\CreateCurso;
 use App\Filament\App\Resources\Cursos\Pages\EditCurso;
 use App\Filament\App\Resources\Cursos\Pages\ListCursos;
+use App\Filament\App\Resources\Cursos\Pages\QrDinamicoSesion;
 use App\Filament\App\Resources\Cursos\Pages\RegistrarAsistencia;
 use App\Filament\App\Resources\Cursos\Pages\ViewCurso;
 use App\Filament\App\Resources\Cursos\RelationManagers\ResumenAsistenciaRelationManager;
@@ -77,6 +78,7 @@ class CursoResource extends Resource
             'view' => ViewCurso::route('/{record}'),
             'edit' => EditCurso::route('/{record}/edit'),
             'asistencia' => RegistrarAsistencia::route('/{record}/sesiones/{sesion}/asistencia'),
+            'qr' => QrDinamicoSesion::route('/{record}/sesiones/{sesion}/qr'),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Proyectos;
 use App\Filament\App\Resources\Proyectos\Pages\CreateProyecto;
 use App\Filament\App\Resources\Proyectos\Pages\EditProyecto;
 use App\Filament\App\Resources\Proyectos\Pages\ListProyectos;
+use App\Filament\App\Resources\Proyectos\Pages\QrDinamicoTutoria;
 use App\Filament\App\Resources\Proyectos\Pages\RegistrarAsistenciaTutoria;
 use App\Filament\App\Resources\Proyectos\Pages\ViewProyecto;
 use App\Filament\App\Resources\Proyectos\RelationManagers\IntegrantesRelationManager;
@@ -79,6 +80,7 @@ class ProyectoResource extends Resource
             'view' => ViewProyecto::route('/{record}'),
             'edit' => EditProyecto::route('/{record}/edit'),
             'tutoria' => RegistrarAsistenciaTutoria::route('/{record}/tutorias/{tutoria}/asistencia'),
+            'qrTutoria' => QrDinamicoTutoria::route('/{record}/tutorias/{tutoria}/qr'),
         ];
     }
 }

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -102,6 +103,21 @@ class SesionClase extends Model implements Sesionable
     public function fechaLarga(): string
     {
         return DiaSemana::from($this->fecha->dayOfWeekIso)->getLabel().' '.$this->fecha->format('d/m/Y');
+    }
+
+    public function inicio(): Carbon
+    {
+        return $this->fecha->copy()->setTimeFromTimeString($this->hora_inicio);
+    }
+
+    public function fin(): Carbon
+    {
+        return $this->fecha->copy()->setTimeFromTimeString($this->hora_fin);
+    }
+
+    public function ubicacion(): ?Sede
+    {
+        return $this->curso->seccion->sede;
     }
 
     public function yaOcurrio(): bool

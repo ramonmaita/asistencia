@@ -50,6 +50,15 @@ class ClasesDeHoy extends TableWidget
                     ->label('Registrados'),
             ])
             ->recordActions([
+                Action::make('qr')
+                    ->label('QR')
+                    ->icon(Heroicon::OutlinedQrCode)
+                    ->color('gray')
+                    ->visible(fn (SesionClase $record): bool => auth()->user()->can('registrarAsistencia', $record))
+                    ->url(fn (SesionClase $record): string => CursoResource::getUrl('qr', [
+                        'record' => $record->curso,
+                        'sesion' => $record,
+                    ])),
                 Action::make('asistencia')
                     ->label('Tomar asistencia')
                     ->icon(Heroicon::OutlinedClipboardDocumentCheck)

@@ -2,6 +2,7 @@
 
 namespace App\Models\Contracts;
 
+use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -52,6 +53,21 @@ interface Sesionable
     public function fechaLarga(): string;
 
     public function yaOcurrio(): bool;
+
+    /**
+     * Fecha y hora de inicio de la sesión.
+     */
+    public function inicio(): Carbon;
+
+    /**
+     * Fecha y hora de fin de la sesión.
+     */
+    public function fin(): Carbon;
+
+    /**
+     * Sede donde ocurre, para validar la ubicación del QR dinámico (null si no aplica).
+     */
+    public function ubicacion(): ?Sede;
 
     public function marcarRealizada(): void;
 }

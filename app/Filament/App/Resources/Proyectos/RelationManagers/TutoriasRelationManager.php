@@ -125,6 +125,15 @@ class TutoriasRelationManager extends RelationManager
                         'record' => $this->getOwnerRecord(),
                         'tutoria' => $record,
                     ])),
+                Action::make('qr')
+                    ->label('QR')
+                    ->icon(Heroicon::OutlinedQrCode)
+                    ->color('gray')
+                    ->visible(fn (Tutoria $record): bool => $record->fecha->isToday() && auth()->user()->can('registrarAsistencia', $record))
+                    ->url(fn (Tutoria $record): string => ProyectoResource::getUrl('qrTutoria', [
+                        'record' => $this->getOwnerRecord(),
+                        'tutoria' => $record,
+                    ])),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

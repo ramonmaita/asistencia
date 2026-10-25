@@ -16,13 +16,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['pnf_id', 'cedula', 'nombres', 'apellidos', 'email', 'telefono', 'password', 'debe_cambiar_password', 'activo'])]
 #[Hidden(['password', 'remember_token', 'qr_token'])]
 class Estudiante extends Authenticatable implements FilamentUser, HasName
 {
     /** @use HasFactory<EstudianteFactory> */
-    use BelongsToPnf, HasFactory, Notifiable;
+    use BelongsToPnf, HasApiTokens, HasFactory, Notifiable;
 
     protected $attributes = [
         'debe_cambiar_password' => true,

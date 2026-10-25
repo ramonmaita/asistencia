@@ -60,17 +60,20 @@ class RegistrarAsistencias
     }
 
     /**
-     * Estado inicial para el formulario: el ya registrado o "presente".
+     * Estado inicial para el formulario: el ya registrado o, para quien no
+     * tiene registro, "presente". Si la asistencia ya empezó a tomarse (por
+     * ejemplo, por QR), quien no se registró aparece "ausente".
      *
      * @return array<int, EstadoAsistencia>
      */
     public function estadosIniciales(Sesionable $sesion): array
     {
         $registrados = $sesion->asistencias()->pluck('estado', 'estudiante_id');
+        $porDefecto = $registrados->isEmpty() ? EstadoAsistencia::Presente : EstadoAsistencia::Ausente;
 
         return $sesion->participantes()
             ->pluck('estudiantes.id')
-            ->mapWithKeys(fn (int $id): array => [$id => $registrados->get($id, EstadoAsistencia::Presente)])
+            ->mapWithKeys(fn (int $id): array => [$id => $registrados->get($id, $porDefecto)])
             ->all();
     }
 }
