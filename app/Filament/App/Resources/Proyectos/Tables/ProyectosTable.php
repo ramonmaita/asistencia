@@ -18,7 +18,7 @@ class ProyectosTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->with(['curso.unidadCurricular', 'curso.seccion.trayecto', 'curso.docentes'])
+                ->with(['curso.unidadCurricular', 'curso.seccion.trayecto', 'curso.docentes', 'tutorTecnico'])
                 ->withCount(['integrantes', 'tutorias as tutorias_realizadas_count' => fn (Builder $tutorias) => $tutorias->realizadas()]))
             ->columns([
                 TextColumn::make('titulo')
@@ -30,8 +30,11 @@ class ProyectosTable
                     ->label('Sección')
                     ->description(fn (Proyecto $record): string => $record->curso->unidadCurricular->nombre),
                 TextColumn::make('curso.docentes.name')
-                    ->label('Tutores')
+                    ->label('Tutor académico')
                     ->badge(),
+                TextColumn::make('tutorTecnico.name')
+                    ->label('Tutor técnico')
+                    ->placeholder('—'),
                 TextColumn::make('integrantes_count')
                     ->label('Integrantes')
                     ->formatStateUsing(fn (int $state, Proyecto $record): string => "{$state} / {$record->curso->seccion->trayecto->max_integrantes}")

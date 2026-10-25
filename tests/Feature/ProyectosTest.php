@@ -256,6 +256,75 @@ class ProyectosTest extends TestCase
         $this->assertSame($tutor->id, $integrante->veredicto_por);
     }
 
+    public function test_cada_veredicto_queda_en_el_historial(): void
+    {
+        [$pnf, $curso, $tutor] = $this->cursoDeProyecto();
+        $coordinador = User::factory()->coordinadorDe($pnf)->create();
+        $proyecto = Proyecto::factory()->for($curso)->create();
+        $this->integrantes($proyecto, 1);
+        $integrante = $proyecto->integrantes()->sole();
+        $integrante->registrarVeredicto(VeredictoProyecto::Reprobado, $tutor, 'No entregó el informe');
+
+        $this->entrar($coordinador, $pnf);
+
+        Livewire::test(IntegrantesRelationManager::class, ['ownerRecord' => $proyecto, 'pageClass' => ViewProyecto::class])
+            ->callAction(TestAction::make('veredicto')->table($integrante), data: ['veredicto' => 'aprobado', 'observacion' => 'Entregó en la prórroga'])
+            ->assertActionVisible(TestAction::make('historial')->table($integrante));
+
+        $this->assertSame(VeredictoProyecto::Aprobado, $integrante->fresh()->veredicto);
+        $this->assertSame(
+            [
+                [VeredictoProyecto::Reprobado, VeredictoProyecto::Aprobado, $coordinador->id, 'Entregó en la prórroga'],
+                [null, VeredictoProyecto::Reprobado, $tutor->id, 'No entregó el informe'],
+            ],
+            $integrante->historialVeredictos()->get()->map(fn ($cambio): array => [$cambio->veredicto_anterior, $cambio->veredicto, $cambio->registrado_por, $cambio->observacion])->all(),
+        );
+    }
+
+    public function test_el_tutor_tecnico_ve_el_proyecto_y_registra_tutorias_pero_no_el_veredicto(): void
+    {
+        [$pnf, $curso] = $this->cursoDeProyecto();
+        $tecnico = User::factory()->docenteDe($pnf)->create();
+        $proyecto = Proyecto::factory()->for($curso)->create(['tutor_tecnico_id' => $tecnico->id]);
+        $this->integrantes($proyecto, 1);
+        $tutoria = Tutoria::factory()->for($proyecto)->create(['fecha' => '2026-10-19']);
+
+        $this->entrar($tecnico, $pnf);
+
+        $this->get(ViewProyecto::getUrl(['record' => $proyecto], tenant: $pnf))->assertOk();
+        $this->get(RegistrarAsistenciaTutoria::getUrl(['record' => $proyecto, 'tutoria' => $tutoria], tenant: $pnf))->assertOk();
+        $this->assertTrue($tecnico->can('registrarAsistencia', $tutoria));
+        $this->assertFalse($tecnico->can('registrarVeredicto', $proyecto));
+        $this->assertFalse($tecnico->can('update', $proyecto));
+
+        Livewire::test(IntegrantesRelationManager::class, ['ownerRecord' => $proyecto, 'pageClass' => ViewProyecto::class])
+            ->assertActionHidden(TestAction::make('veredicto')->table($proyecto->integrantes()->sole()))
+            ->assertActionHidden(TestAction::make('agregar')->table());
+    }
+
+    public function test_el_tutor_tecnico_debe_ser_un_docente_del_pnf_distinto_al_academico(): void
+    {
+        [$pnf, $curso, $tutor] = $this->cursoDeProyecto();
+        $deOtroPnf = User::factory()->docenteDe(Pnf::factory()->create())->create();
+        $tecnico = User::factory()->docenteDe($pnf)->create();
+
+        $this->entrar($tutor, $pnf);
+
+        foreach ([$tutor, $deOtroPnf] as $invalido) {
+            Livewire::test(CreateProyecto::class)
+                ->fillForm(['curso_id' => $curso->id, 'titulo' => 'Proyecto', 'tutor_tecnico_id' => $invalido->id])
+                ->call('create')
+                ->assertHasFormErrors(['tutor_tecnico_id']);
+        }
+
+        Livewire::test(CreateProyecto::class)
+            ->fillForm(['curso_id' => $curso->id, 'titulo' => 'Proyecto', 'tutor_tecnico_id' => $tecnico->id, 'tutor_institucional' => 'Ing. Rosa Marcano'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('proyectos', ['tutor_tecnico_id' => $tecnico->id, 'tutor_institucional' => 'Ing. Rosa Marcano']);
+    }
+
     public function test_descarga_el_acta_del_proyecto(): void
     {
         [$pnf, $curso, $tutor] = $this->cursoDeProyecto();

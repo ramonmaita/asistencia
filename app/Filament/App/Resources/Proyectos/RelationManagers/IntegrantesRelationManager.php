@@ -21,12 +21,14 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
- * Integrantes del proyecto con su asistencia a tutorías y su veredicto.
+ * Integrantes del proyecto con su asistencia a tutorías y su veredicto
+ * (con el historial de cambios).
  */
 class IntegrantesRelationManager extends RelationManager
 {
@@ -76,7 +78,7 @@ class IntegrantesRelationManager extends RelationManager
         $trayecto = $this->getOwnerRecord()->trayecto();
 
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['estudiante', 'autorDelVeredicto']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['estudiante', 'autorDelVeredicto'])->withCount('historialVeredictos'))
             ->recordTitle(fn (IntegranteProyecto $record): string => $record->estudiante->nombre_completo)
             ->description(fn (): string => $trayecto->min_integrantes === $trayecto->max_integrantes
                 ? "Modalidad {$trayecto->modalidad_proyecto->getLabel()}: {$trayecto->max_integrantes} integrante(s). Límite de inasistencia a tutorías: {$this->umbral()}."
@@ -162,6 +164,18 @@ class IntegrantesRelationManager extends RelationManager
 
                         Notification::make()->title('Veredicto registrado')->success()->send();
                     }),
+                Action::make('historial')
+                    ->label('Historial')
+                    ->icon(Heroicon::OutlinedClock)
+                    ->color('gray')
+                    ->visible(fn (IntegranteProyecto $record): bool => $record->historial_veredictos_count > 0)
+                    ->modalHeading(fn (IntegranteProyecto $record): string => "Historial de veredictos de {$record->estudiante->nombre_completo}")
+                    ->modalContent(fn (IntegranteProyecto $record): View => view('filament.app.historial-veredictos', [
+                        'historial' => $record->historialVeredictos()->with('autor')->get(),
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar')
+                    ->slideOver(),
                 DeleteAction::make()
                     ->label('Quitar')
                     ->modalHeading('Quitar del proyecto')

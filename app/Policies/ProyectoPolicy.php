@@ -7,8 +7,9 @@ use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * El coordinador gestiona todos los proyectos del PNF; el docente de la UC
- * Proyecto (tutor académico) gestiona los de sus cursos.
+ * El coordinador gestiona todos los proyectos del PNF; el tutor académico
+ * (docente de la UC Proyecto) gestiona los de sus cursos y el tutor técnico
+ * solo los ve (y registra tutorías, ver TutoriaPolicy).
  */
 class ProyectoPolicy extends GestionadaPorCoordinador
 {
@@ -32,7 +33,7 @@ class ProyectoPolicy extends GestionadaPorCoordinador
 
     public function update(User $user, Model $proyecto): bool
     {
-        return $this->tutora($user, $proyecto);
+        return $this->esAcademico($user, $proyecto);
     }
 
     /**
@@ -40,7 +41,7 @@ class ProyectoPolicy extends GestionadaPorCoordinador
      */
     public function delete(User $user, Model $proyecto): bool
     {
-        return $this->tutora($user, $proyecto) && ! $proyecto->tutorias()->realizadas()->exists();
+        return $this->esAcademico($user, $proyecto) && ! $proyecto->tutorias()->realizadas()->exists();
     }
 
     public function deleteAny(User $user): bool
@@ -53,7 +54,12 @@ class ProyectoPolicy extends GestionadaPorCoordinador
      */
     public function registrarVeredicto(User $user, Model $proyecto): bool
     {
-        return $this->tutora($user, $proyecto);
+        return $this->esAcademico($user, $proyecto);
+    }
+
+    private function esAcademico(User $user, Model $proyecto): bool
+    {
+        return $proyecto->pnf_id === app(PnfActual::class)->id() && $proyecto->esTutorAcademico($user);
     }
 
     private function tutora(User $user, Model $proyecto): bool

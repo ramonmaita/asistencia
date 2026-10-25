@@ -19,7 +19,7 @@
         .reprobado { color: #b91c1c; font-weight: bold; }
         .pendiente { color: #6b7280; }
         .firmas { width: 100%; margin-top: 22mm; border-collapse: collapse; }
-        .firmas td { width: 50%; text-align: center; padding: 0 6mm; }
+        .firmas td { width: 33.3%; text-align: center; padding: 0 4mm; }
         .linea { border-top: 0.3mm solid #1f2937; padding-top: 1.5mm; }
         .pie { margin-top: 6mm; color: #6b7280; font-size: 7.5pt; }
     </style>
@@ -34,16 +34,20 @@
             <td>{{ $proyecto->curso->seccion->codigo }} ({{ $proyecto->curso->seccion->trayecto->nombre }}) · Periodo {{ $proyecto->curso->seccion->periodo->nombre }}</td>
         </tr>
         <tr>
-            <td class="etiqueta">Comunidad</td>
+            <td class="etiqueta">Comunidad o institución</td>
             <td>{{ $proyecto->comunidad ?: '—' }}</td>
         </tr>
         <tr>
-            <td class="etiqueta">Tutor(es) académico(s)</td>
+            <td class="etiqueta">Tutor académico</td>
             <td>{{ $proyecto->curso->docentes->pluck('name')->implode(', ') ?: '—' }}</td>
         </tr>
         <tr>
-            <td class="etiqueta">Tutor comunitario</td>
-            <td>{{ $proyecto->tutor_comunitario ?: '—' }}{{ $proyecto->tutor_comunitario_contacto ? ' · '.$proyecto->tutor_comunitario_contacto : '' }}</td>
+            <td class="etiqueta">Tutor técnico</td>
+            <td>{{ $proyecto->tutorTecnico?->name ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td class="etiqueta">Tutor institucional</td>
+            <td>{{ $proyecto->tutor_institucional ?: '—' }}{{ $proyecto->tutor_institucional_contacto ? ' · '.$proyecto->tutor_institucional_contacto : '' }}</td>
         </tr>
         <tr>
             <td class="etiqueta">Tutorías realizadas</td>
@@ -82,7 +86,8 @@
     <table class="firmas">
         <tr>
             <td><div class="linea">Tutor académico</div></td>
-            <td><div class="linea">Tutor comunitario</div></td>
+            <td><div class="linea">Tutor técnico</div></td>
+            <td><div class="linea">Tutor institucional</div></td>
         </tr>
     </table>
 

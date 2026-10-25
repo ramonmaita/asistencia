@@ -14,10 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
- * Proyecto de un curso de la UC Proyecto. Sus tutores académicos son los
- * docentes del curso; el tutor comunitario es externo y no usa el sistema.
+ * Proyecto de un curso de la UC Proyecto. Tiene tres tutores:
+ *  - académico: los docentes del curso de la UC Proyecto;
+ *  - técnico: otro docente del PNF, que acompaña las tutorías;
+ *  - institucional: persona externa a la universidad, sin acceso al sistema.
  */
-#[Fillable(['pnf_id', 'curso_id', 'titulo', 'descripcion', 'comunidad', 'tutor_comunitario', 'tutor_comunitario_contacto'])]
+#[Fillable(['pnf_id', 'curso_id', 'titulo', 'descripcion', 'comunidad', 'tutor_tecnico_id', 'tutor_institucional', 'tutor_institucional_contacto'])]
 class Proyecto extends Model
 {
     /** @use HasFactory<ProyectoFactory> */
@@ -26,6 +28,11 @@ class Proyecto extends Model
     public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
+    }
+
+    public function tutorTecnico(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'tutor_tecnico_id');
     }
 
     public function integrantes(): HasMany
@@ -57,9 +64,14 @@ class Proyecto extends Model
         return $this->curso->seccion->trayecto;
     }
 
+    /**
+     * Proyectos en los que el docente es tutor académico o técnico.
+     */
     public function scopeTutoradosPor(Builder $query, User $docente): void
     {
-        $query->whereHas('curso', fn (Builder $cursos) => $cursos->dictadosPor($docente));
+        $query->where(fn (Builder $proyectos) => $proyectos
+            ->whereHas('curso', fn (Builder $cursos) => $cursos->dictadosPor($docente))
+            ->orWhere('tutor_tecnico_id', $docente->getKey()));
     }
 
     public function scopeDelPeriodoActivo(Builder $query): void
@@ -72,10 +84,21 @@ class Proyecto extends Model
         $query->whereHas('integrantes', fn (Builder $integrantes) => $integrantes->whereBelongsTo($estudiante));
     }
 
-    public function esTutoradoPor(User $user): bool
+    /**
+     * El tutor académico (o el coordinador) gestiona integrantes y veredictos.
+     */
+    public function esTutorAcademico(User $user): bool
     {
         return $user->esCoordinadorDe($this->curso->pnf)
             || $this->curso->docentes()->whereKey($user->getKey())->exists();
+    }
+
+    /**
+     * Los tutores académico y técnico ven el proyecto y registran tutorías.
+     */
+    public function esTutoradoPor(User $user): bool
+    {
+        return $this->esTutorAcademico($user) || $this->tutor_tecnico_id === $user->getKey();
     }
 
     /**

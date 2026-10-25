@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Acta del proyecto en PDF: datos del proyecto, asistencia de cada
- * integrante a las tutorías, su veredicto y espacio para las firmas.
+ * integrante a las tutorías, su veredicto y espacio para las firmas de los
+ * tres tutores.
  */
 class GenerarActaProyecto
 {
@@ -17,7 +18,7 @@ class GenerarActaProyecto
 
     public function handle(Proyecto $proyecto): StreamedResponse
     {
-        $proyecto->loadMissing(['pnf', 'curso.unidadCurricular', 'curso.seccion.periodo', 'curso.seccion.trayecto', 'curso.docentes', 'integrantes.estudiante']);
+        $proyecto->loadMissing(['pnf', 'curso.unidadCurricular', 'curso.seccion.periodo', 'curso.seccion.trayecto', 'curso.docentes', 'tutorTecnico', 'integrantes.estudiante']);
 
         $pdf = Pdf::loadView('pdf.acta-proyecto', [
             'proyecto' => $proyecto,

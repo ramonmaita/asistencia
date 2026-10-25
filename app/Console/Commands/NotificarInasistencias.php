@@ -9,6 +9,7 @@ use App\Enums\NivelInasistencia;
 use App\Models\AvisoInasistencia;
 use App\Models\Curso;
 use App\Models\Proyecto;
+use App\Models\User;
 use App\Notifications\NivelInasistenciaAlcanzado;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -19,9 +20,10 @@ use Illuminate\Support\Facades\Notification;
 
 /**
  * Revisa los cursos y proyectos del periodo activo y avisa (base de datos y
- * correo) al estudiante, a los docentes del curso y a los coordinadores del
- * PNF cuando un estudiante pasa a "en riesgo" o supera el umbral, por
- * separado para clases y para tutorías. Cada nivel se avisa una sola vez
+ * correo) al estudiante, a los docentes del curso (o a los tutores académico
+ * y técnico del proyecto) y a los coordinadores del PNF cuando un estudiante
+ * pasa a "en riesgo" o supera el umbral, por separado para clases y para
+ * tutorías. Cada nivel se avisa una sola vez
  * por estudiante, curso y ámbito (ver avisos_inasistencia).
  */
 #[Signature('asistencias:notificar-inasistencias')]
@@ -39,13 +41,19 @@ class NotificarInasistencias extends Command
             ->delPeriodoActivo()
             ->whereHas('pnf', $pnfActivo)
             ->with(['pnf.coordinadores', 'docentes', 'unidadCurricular', 'seccion'])
-            ->each(fn (Curso $curso) => $this->avisar($curso, $calcular->handle($curso), AmbitoInasistencia::Clases));
+            ->each(fn (Curso $curso) => $this->avisar($curso, $calcular->handle($curso), AmbitoInasistencia::Clases, $curso->docentes));
 
         Proyecto::query()
             ->delPeriodoActivo()
             ->whereHas('pnf', $pnfActivo)
-            ->with(['curso.pnf.coordinadores', 'curso.docentes', 'curso.unidadCurricular', 'curso.seccion.trayecto'])
-            ->each(fn (Proyecto $proyecto) => $this->avisar($proyecto->curso, $calcular->deProyecto($proyecto), AmbitoInasistencia::Tutorias, $proyecto));
+            ->with(['curso.pnf.coordinadores', 'curso.docentes', 'curso.unidadCurricular', 'curso.seccion.trayecto', 'tutorTecnico'])
+            ->each(fn (Proyecto $proyecto) => $this->avisar(
+                $proyecto->curso,
+                $calcular->deProyecto($proyecto),
+                AmbitoInasistencia::Tutorias,
+                $proyecto->curso->docentes->push($proyecto->tutorTecnico)->filter(),
+                $proyecto,
+            ));
 
         $this->info("Avisos de inasistencia enviados: {$this->enviados}.");
 
@@ -54,8 +62,9 @@ class NotificarInasistencias extends Command
 
     /**
      * @param  Collection<int, ResumenInasistencia>  $resumenes
+     * @param  Collection<int, User>  $docentes  Docentes a cargo (del curso o tutores del proyecto).
      */
-    private function avisar(Curso $curso, Collection $resumenes, AmbitoInasistencia $ambito, ?Proyecto $proyecto = null): void
+    private function avisar(Curso $curso, Collection $resumenes, AmbitoInasistencia $ambito, Collection $docentes, ?Proyecto $proyecto = null): void
     {
         $avisados = AvisoInasistencia::query()
             ->whereBelongsTo($curso)
@@ -84,7 +93,7 @@ class NotificarInasistencias extends Command
                 'porcentaje' => $resumen->porcentaje,
             ]);
 
-            $personal = $curso->docentes->merge($curso->pnf->coordinadores)->unique('id');
+            $personal = $docentes->merge($curso->pnf->coordinadores)->unique('id');
 
             Notification::send(
                 $personal->push($resumen->estudiante),

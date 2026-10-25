@@ -8,7 +8,7 @@ use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Las tutorías las gestiona el tutor (docente de la UC Proyecto) o el coordinador.
+ * Las tutorías las gestionan los tutores académico y técnico del proyecto o el coordinador.
  */
 class TutoriaPolicy extends GestionadaPorCoordinador
 {

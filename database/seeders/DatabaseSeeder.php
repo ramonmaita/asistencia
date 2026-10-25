@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Storage;
  *  - Superadmin:   admin@gestionpnf.test        → /admin y /app
  *  - Coordinador:  coordinador@gestionpnf.test  → /app (PNF Informática)
  *  - Docente:      docente@gestionpnf.test      → /app (Informática y Administración)
+ *  - Tutor técnico: tecnico@gestionpnf.test     → /app (Informática, tutor técnico de sus proyectos)
  *  - Estudiante:   cédula 30111222              → /estudiante (Informática)
  */
 class DatabaseSeeder extends Seeder
@@ -82,6 +83,12 @@ class DatabaseSeeder extends Seeder
         $docente->pnfs()->attach($informatica, ['rol' => RolPnf::Docente]);
         $docente->pnfs()->attach($administracion, ['rol' => RolPnf::Docente]);
 
+        $tecnico = User::factory()->create([
+            'name' => 'Docente Técnico',
+            'email' => 'tecnico@gestionpnf.test',
+        ]);
+        $tecnico->pnfs()->attach($informatica, ['rol' => RolPnf::Docente]);
+
         $maria = Estudiante::factory()->for($informatica)->create([
             'cedula' => '30111222',
             'nombres' => 'María',
@@ -100,21 +107,23 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->registrarAsistencias($docente, $maria);
-        $this->crearProyectos($docente, $maria);
+        $this->crearProyectos($docente, $tecnico, $maria);
     }
 
     /**
      * Arma grupos de proyecto en los cursos de la UC Proyecto con sus
      * tutorías semanales (hasta ayer) y la asistencia de los integrantes.
-     * El primer grupo de Informática (el de María) ya tiene un veredicto.
+     * En Informática el tutor técnico es "Docente Técnico". El primer grupo
+     * (el de María) ya tiene un veredicto.
      */
-    private function crearProyectos(User $docente, Estudiante $maria): void
+    private function crearProyectos(User $docente, User $tecnico, Estudiante $maria): void
     {
         $registrar = app(RegistrarAsistencias::class);
         $titulos = ['Sistema de control de inventario para el consejo comunal', 'Plataforma de citas para el ambulatorio', 'Registro digital de la biblioteca escolar', 'Gestión de la cooperativa de transporte'];
 
         foreach (Curso::query()->deProyecto()->with(['estudiantes', 'seccion.trayecto', 'seccion.periodo'])->get() as $curso) {
             $trayecto = $curso->seccion->trayecto;
+            $tutorTecnico = $tecnico->pnfs->contains('id', $curso->pnf_id) ? $tecnico : null;
             $estudiantes = $curso->estudiantes->sortByDesc(fn (Estudiante $estudiante): bool => $estudiante->is($maria))->values();
 
             foreach ($estudiantes->chunk($trayecto->max_integrantes)->take(3) as $numero => $grupo) {
@@ -123,8 +132,9 @@ class DatabaseSeeder extends Seeder
                     'curso_id' => $curso->id,
                     'titulo' => $titulos[$numero % count($titulos)],
                     'comunidad' => 'Consejo comunal '.fake()->lastName(),
-                    'tutor_comunitario' => fake()->name(),
-                    'tutor_comunitario_contacto' => '0414-'.fake()->numerify('#######'),
+                    'tutor_tecnico_id' => $tutorTecnico?->id,
+                    'tutor_institucional' => fake()->name(),
+                    'tutor_institucional_contacto' => '0414-'.fake()->numerify('#######'),
                 ]);
                 app(AgregarIntegrantes::class)->handle($proyecto, $grupo->modelKeys());
 

@@ -82,7 +82,8 @@ class NotificarInasistenciasTest extends TestCase
     {
         [$curso, $estudiante, $docente] = $this->escenario();
         $curso->seccion->trayecto->update(['umbral_inasistencia_tutorias' => 25]);
-        $proyecto = Proyecto::factory()->for($curso)->create(['titulo' => 'Huerto escolar']);
+        $tecnico = User::factory()->docenteDe($curso->pnf)->create();
+        $proyecto = Proyecto::factory()->for($curso)->create(['titulo' => 'Huerto escolar', 'tutor_tecnico_id' => $tecnico->id]);
         app(AgregarIntegrantes::class)->handle($proyecto, [$estudiante->id]);
         Asistencia::factory()->for(Tutoria::factory()->for($proyecto)->realizada(), 'sesionable')->for($estudiante)->ausente()->create();
         Notification::fake();
@@ -91,6 +92,7 @@ class NotificarInasistenciasTest extends TestCase
         $this->artisan('asistencias:notificar-inasistencias')->assertSuccessful();
 
         Notification::assertSentToTimes($docente, NivelInasistenciaAlcanzado::class, 1);
+        Notification::assertSentToTimes($tecnico, NivelInasistenciaAlcanzado::class, 1);
         Notification::assertSentTo($estudiante, NivelInasistenciaAlcanzado::class, fn (NivelInasistenciaAlcanzado $aviso): bool => $aviso->esDeTutorias()
             && $aviso->nivel === NivelInasistencia::Superado
             && str_contains($aviso->toMail($estudiante)->introLines[0], 'tutorías del proyecto «Huerto escolar»'));

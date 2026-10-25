@@ -25,7 +25,7 @@ class ProyectoFactory extends Factory
             'pnf_id' => fn (array $attributes) => Curso::withoutGlobalScopes()->find($attributes['curso_id'])->pnf_id,
             'titulo' => 'Sistema de '.fake()->words(3, true),
             'comunidad' => 'Consejo comunal '.fake()->lastName(),
-            'tutor_comunitario' => fake()->name(),
+            'tutor_institucional' => fake()->name(),
         ];
     }
 }

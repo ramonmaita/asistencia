@@ -55,7 +55,7 @@ class ProyectoResource extends Resource
     {
         return parent::getEloquentQuery()
             ->conIntegrante(static::estudiante())
-            ->with(['curso.unidadCurricular', 'curso.seccion.periodo', 'curso.seccion.trayecto', 'curso.docentes', 'estudiantes' => fn ($estudiantes) => $estudiantes->orderBy('apellidos')->orderBy('nombres')]);
+            ->with(['curso.unidadCurricular', 'curso.seccion.periodo', 'curso.seccion.trayecto', 'curso.docentes', 'tutorTecnico', 'estudiantes' => fn ($estudiantes) => $estudiantes->orderBy('apellidos')->orderBy('nombres')]);
     }
 
     public static function estudiante(): Estudiante
@@ -116,9 +116,10 @@ class ProyectoResource extends Resource
                         TextEntry::make('curso.unidadCurricular.nombre')->label('Unidad curricular'),
                         TextEntry::make('curso.seccion.codigo')->label('Sección'),
                         TextEntry::make('curso.seccion.periodo.nombre')->label('Periodo'),
-                        TextEntry::make('comunidad')->label('Comunidad')->placeholder('—'),
-                        TextEntry::make('curso.docentes.name')->label('Tutor(es) académico(s)')->badge()->placeholder('Sin asignar'),
-                        TextEntry::make('tutor_comunitario')->label('Tutor comunitario')->placeholder('—'),
+                        TextEntry::make('comunidad')->label('Comunidad o institución')->placeholder('—'),
+                        TextEntry::make('curso.docentes.name')->label('Tutor académico')->badge()->placeholder('Sin asignar'),
+                        TextEntry::make('tutorTecnico.name')->label('Tutor técnico')->placeholder('Sin asignar'),
+                        TextEntry::make('tutor_institucional')->label('Tutor institucional')->placeholder('—'),
                         TextEntry::make('estudiantes.nombre_completo')->label('Integrantes')->listWithLineBreaks()->columnSpan(2),
                         TextEntry::make('descripcion')->label('Descripción')->placeholder('—'),
                     ]),

@@ -66,11 +66,16 @@ class PanelEstudianteProyectoTest extends TestCase
 
         $justificacion = Justificacion::sole();
         $this->assertSame(1, $tutor->notifications()->count());
+        $this->assertSame(1, $proyecto->tutorTecnico->notifications()->count());
 
         $this->actingAs($tutor, 'web');
         Filament::setCurrentPanel('app');
         Filament::setTenant($proyecto->pnf);
         app(PnfActual::class)->establecer($proyecto->pnf);
+
+        Livewire::test(ListJustificaciones::class)->assertCanSeeTableRecords([$justificacion]);
+
+        $this->actingAs($proyecto->tutorTecnico, 'web');
 
         Livewire::test(ListJustificaciones::class)->assertCanSeeTableRecords([$justificacion]);
     }
@@ -90,7 +95,7 @@ class PanelEstudianteProyectoTest extends TestCase
             ->create();
         $estudiante = Estudiante::factory()->for($pnf)->create();
         $curso->estudiantes()->attach($estudiante);
-        $proyecto = Proyecto::factory()->for($curso)->create();
+        $proyecto = Proyecto::factory()->for($curso)->create(['tutor_tecnico_id' => User::factory()->docenteDe($pnf)->create()->id]);
         app(AgregarIntegrantes::class)->handle($proyecto, [$estudiante->id]);
 
         return [$proyecto, $estudiante, $tutor];

@@ -17,7 +17,7 @@ use UnitEnum;
 /**
  * Justificaciones solicitadas por los estudiantes, de clases y de tutorías.
  * El coordinador ve las de todo el PNF; el docente, las de sus cursos y de
- * los proyectos que tutora.
+ * los proyectos que tutora (como tutor académico o técnico).
  */
 class JustificacionResource extends Resource
 {
@@ -53,10 +53,9 @@ class JustificacionResource extends Resource
             $query->whereHas('asistencia', fn (Builder $asistencias) => $asistencias->whereHasMorph(
                 'sesionable',
                 [SesionClase::class, Tutoria::class],
-                fn (Builder $sesiones, string $tipo) => $sesiones->whereHas(
-                    $tipo === Tutoria::class ? 'proyecto.curso' : 'curso',
-                    fn (Builder $cursos) => $cursos->dictadosPor($user),
-                ),
+                fn (Builder $sesiones, string $tipo) => $tipo === Tutoria::class
+                    ? $sesiones->whereHas('proyecto', fn (Builder $proyectos) => $proyectos->tutoradosPor($user))
+                    : $sesiones->whereHas('curso', fn (Builder $cursos) => $cursos->dictadosPor($user)),
             ));
         }
 

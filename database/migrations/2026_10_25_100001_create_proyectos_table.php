@@ -8,7 +8,9 @@ return new class extends Migration
 {
     /**
      * Proyecto socio tecnológico/integrador de un curso de la UC Proyecto.
-     * Sus tutores académicos son los docentes de ese curso.
+     * Tiene tres tutores: el académico (los docentes de ese curso), el
+     * técnico (otro docente del PNF) y el institucional (persona externa,
+     * sin acceso al sistema).
      */
     public function up(): void
     {
@@ -19,8 +21,9 @@ return new class extends Migration
             $table->string('titulo');
             $table->text('descripcion')->nullable();
             $table->string('comunidad')->nullable();
-            $table->string('tutor_comunitario')->nullable();
-            $table->string('tutor_comunitario_contacto')->nullable();
+            $table->foreignId('tutor_tecnico_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('tutor_institucional')->nullable();
+            $table->string('tutor_institucional_contacto')->nullable();
             $table->timestamps();
         });
     }

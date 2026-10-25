@@ -57,9 +57,12 @@ class Tutoria extends Model implements Sesionable
         return $this->proyecto->estudiantes();
     }
 
+    /**
+     * Tutores académicos y, si lo hay, el técnico.
+     */
     public function responsables(): Collection
     {
-        return $this->proyecto->curso->docentes;
+        return $this->proyecto->curso->docentes->push($this->proyecto->tutorTecnico)->filter()->unique('id')->values();
     }
 
     public function esGestionadaPor(User $user): bool
