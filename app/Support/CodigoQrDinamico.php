@@ -32,7 +32,7 @@ class CodigoQrDinamico
 
         return [
             'codigo' => implode(':', [self::PREFIJO, $tipo, $sesion->getKey(), $ventana, $this->firmar($tipo, $sesion->getKey(), $ventana)]),
-            'expira_at' => Carbon::createFromTimestamp(($ventana + 1) * $segundos),
+            'expira_at' => Carbon::createFromTimestamp(($ventana + 1) * $segundos, config('app.timezone')),
             'segundos' => $segundos,
         ];
     }
