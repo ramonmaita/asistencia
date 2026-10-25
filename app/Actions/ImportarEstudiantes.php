@@ -2,9 +2,11 @@
 
 namespace App\Actions;
 
+use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Pnf;
 use App\Models\Seccion;
+use Closure;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -20,8 +22,13 @@ use OpenSpout\Reader\XLSX\Reader as LectorXlsx;
  * Columnas reconocidas (la primera fila es el encabezado, sin importar
  * mayúsculas ni acentos): cedula, nombres, apellidos, email/correo, telefono.
  * Un estudiante que ya existe en el PNF se actualiza; uno que pertenece a
- * otro PNF se reporta como error. Opcionalmente, los inscritos en la sección
- * quedan inscritos también en todas sus unidades curriculares.
+ * otro PNF se reporta como error.
+ *
+ * Los estudiantes pueden quedar inscritos en una sección (y, si se pide, en
+ * todas sus unidades curriculares) o en un curso concreto, que es lo que usa
+ * el docente con la lista del sistema académico. Al inscribir en un curso
+ * también se agregan a su sección: quien repite una unidad curricular
+ * puede pertenecer a varias secciones.
  */
 class ImportarEstudiantes
 {
@@ -40,12 +47,37 @@ class ImportarEstudiantes
 
     /**
      * @param  bool  $inscribirEnCursos  Inscribe también en todas las unidades curriculares de la sección.
+     * @param  Curso|null  $curso  Curso en el que inscribir (en lugar de una sección).
      */
-    public function handle(string $rutaArchivo, Pnf $pnf, ?Seccion $seccion = null, bool $inscribirEnCursos = false): ResultadoImportacion
+    public function handle(string $rutaArchivo, Pnf $pnf, ?Seccion $seccion = null, bool $inscribirEnCursos = false, ?Curso $curso = null): ResultadoImportacion
     {
         if ($seccion && $seccion->pnf_id !== $pnf->getKey()) {
             throw new InvalidArgumentException('La sección no pertenece al PNF.');
         }
+
+        if ($curso && $curso->pnf_id !== $pnf->getKey()) {
+            throw new InvalidArgumentException('El curso no pertenece al PNF.');
+        }
+
+        $inscribir = function (Estudiante $estudiante) use ($seccion, $inscribirEnCursos, $curso): int {
+            if ($curso) {
+                $curso->seccion->estudiantes()->syncWithoutDetaching([$estudiante->getKey()]);
+
+                return count($curso->estudiantes()->syncWithoutDetaching([$estudiante->getKey()])['attached']);
+            }
+
+            if (! $seccion) {
+                return 0;
+            }
+
+            $nuevos = count($seccion->estudiantes()->syncWithoutDetaching([$estudiante->getKey()])['attached']);
+
+            if ($inscribirEnCursos) {
+                $seccion->inscribirEnSusCursos([$estudiante->getKey()]);
+            }
+
+            return $nuevos;
+        };
 
         $resultado = new ResultadoImportacion;
         $encabezados = null;
@@ -71,7 +103,7 @@ class ImportarEstudiantes
                 continue;
             }
 
-            $this->importarFila($numeroFila, $datos, $pnf, $seccion, $inscribirEnCursos, $resultado, $cedulasVistas);
+            $this->importarFila($numeroFila, $datos, $pnf, $inscribir, $resultado, $cedulasVistas);
         }
 
         return $resultado;
@@ -79,9 +111,10 @@ class ImportarEstudiantes
 
     /**
      * @param  array<string, ?string>  $datos
+     * @param  Closure(Estudiante): int  $inscribir  Inscribe al estudiante y devuelve cuántas inscripciones nuevas hizo.
      * @param  array<string, true>  $cedulasVistas
      */
-    private function importarFila(int $numeroFila, array $datos, Pnf $pnf, ?Seccion $seccion, bool $inscribirEnCursos, ResultadoImportacion $resultado, array &$cedulasVistas): void
+    private function importarFila(int $numeroFila, array $datos, Pnf $pnf, Closure $inscribir, ResultadoImportacion $resultado, array &$cedulasVistas): void
     {
         $datos['cedula'] = $this->limpiarCedula($datos['cedula']);
 
@@ -136,13 +169,7 @@ class ImportarEstudiantes
             $resultado->creados++;
         }
 
-        if ($seccion) {
-            $resultado->inscritos += count($seccion->estudiantes()->syncWithoutDetaching([$estudiante->getKey()])['attached']);
-
-            if ($inscribirEnCursos) {
-                $seccion->inscribirEnSusCursos([$estudiante->getKey()]);
-            }
-        }
+        $resultado->inscritos += $inscribir($estudiante);
     }
 
     /**

@@ -109,17 +109,56 @@ class InscripcionEnCursosTest extends TestCase
         $this->assertTrue($algoritmica->estudiantes->contains($repitiente));
     }
 
-    public function test_el_docente_no_gestiona_la_inscripcion(): void
+    public function test_el_docente_importa_la_lista_de_su_curso(): void
     {
-        [$pnf, , $algoritmica] = $this->seccionConDosCursos();
+        [$pnf, $seccion, $algoritmica, $matematica] = $this->seccionConDosCursos();
+        $docente = User::factory()->docenteDe($pnf)->create();
+        $algoritmica->docentes()->attach($docente);
+        $archivo = UploadedFile::fake()->createWithContent('lista.csv', "cedula;nombres;apellidos\n30111222;María;Pérez\n28999888;Juan;Gómez\n");
+
+        $this->entrar($docente, $pnf);
+
+        Livewire::test(ResumenAsistenciaRelationManager::class, ['ownerRecord' => $algoritmica, 'pageClass' => ViewCurso::class])
+            ->callAction(TestAction::make('importarLista')->table(), data: ['archivo' => $archivo])
+            ->assertHasNoFormErrors()
+            ->assertNotified('Importación completada');
+
+        $this->assertSame(2, $algoritmica->estudiantes()->count());
+        $this->assertSame(2, $seccion->estudiantes()->count());
+        $this->assertSame(0, $matematica->estudiantes()->count());
+        $this->assertSame([$pnf->id], Estudiante::pluck('pnf_id')->unique()->values()->all());
+    }
+
+    public function test_quien_repite_queda_en_varias_secciones(): void
+    {
+        [$pnf, $seccion, $algoritmica] = $this->seccionConDosCursos();
+        $otraSeccion = Seccion::factory()->for($seccion->trayecto)->for($seccion->periodo)->create();
+        $repitiente = Estudiante::factory()->for($pnf)->create(['cedula' => '28999888']);
+        $otraSeccion->estudiantes()->attach($repitiente);
+        $archivo = UploadedFile::fake()->createWithContent('lista.csv', "cedula;nombres;apellidos\n28999888;Juan;Gómez\n");
+
+        $this->entrarComoCoordinador($pnf);
+
+        Livewire::test(ResumenAsistenciaRelationManager::class, ['ownerRecord' => $algoritmica, 'pageClass' => ViewCurso::class])
+            ->callAction(TestAction::make('importarLista')->table(), data: ['archivo' => $archivo]);
+
+        $this->assertEqualsCanonicalizing([$seccion->id, $otraSeccion->id], $repitiente->secciones()->pluck('secciones.id')->all());
+        $this->assertTrue($algoritmica->estudiantes->contains($repitiente));
+    }
+
+    public function test_el_docente_gestiona_la_inscripcion_solo_de_sus_cursos(): void
+    {
+        [$pnf, , $algoritmica, $matematica] = $this->seccionConDosCursos();
         $docente = User::factory()->docenteDe($pnf)->create();
         $algoritmica->docentes()->attach($docente);
 
         $this->entrar($docente, $pnf);
 
         Livewire::test(ResumenAsistenciaRelationManager::class, ['ownerRecord' => $algoritmica, 'pageClass' => ViewCurso::class])
-            ->assertActionHidden(TestAction::make('attach')->table())
-            ->assertActionHidden(TestAction::make('inscribirSeccion')->table());
+            ->assertActionVisible(TestAction::make('attach')->table())
+            ->assertActionVisible(TestAction::make('inscribirSeccion')->table());
+        $this->assertTrue($docente->can('gestionarInscripcion', $algoritmica));
+        $this->assertFalse($docente->can('gestionarInscripcion', $matematica));
     }
 
     public function test_desde_el_estudiante_se_inscribe_en_una_unidad_del_periodo_activo(): void
