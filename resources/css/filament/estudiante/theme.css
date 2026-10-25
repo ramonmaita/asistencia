@@ -9,7 +9,11 @@
 @source '../../../../resources/views/filament/**/*';
 
 :root {
-    --gpnf-turquesa: #0f9b8e;
+    --gpnf-turquesa: #13799f;
+}
+
+.fi-topbar-ctn {
+    @apply border-t-4 border-(--gpnf-ambar);
 }
 
 .fi-topbar {

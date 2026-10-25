@@ -14,7 +14,12 @@
 }
 
 :not(.fi-body-has-topbar) .fi-sidebar-header {
-    @apply border-b border-white/10;
+    @apply relative border-b border-white/10;
+
+    /* Franja tricolor como la del logo */
+    &::before {
+        @apply absolute inset-x-0 top-0 h-1 bg-(image:--gpnf-franja) content-[''];
+    }
 }
 
 .fi-sidebar .fi-logo {

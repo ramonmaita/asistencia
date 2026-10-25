@@ -11,33 +11,33 @@ namespace App\Support;
  */
 final class Marca
 {
-    /** Azul marino institucional (paneles de administración y académico). */
+    /** Azul de la UPT (la "P" del logo), para los paneles de administración y académico. */
     public const MARINO = [
-        50 => '#eef3fa',
-        100 => '#d9e3f2',
-        200 => '#b7c9e6',
-        300 => '#8aa7d4',
-        400 => '#5a7fbd',
-        500 => '#3a61a3',
-        600 => '#2c5288',
-        700 => '#234370',
-        800 => '#1d3a66',
-        900 => '#172f52',
-        950 => '#0f1f38',
+        50 => '#eef0fd',
+        100 => '#dde1fb',
+        200 => '#bcc3f6',
+        300 => '#909bef',
+        400 => '#606ee5',
+        500 => '#3d4bd8',
+        600 => '#2433b5',
+        700 => '#1b2896',
+        800 => '#141f86',
+        900 => '#0f1870',
+        950 => '#0b1260',
     ];
 
-    /** Turquesa del panel del estudiante. */
+    /** Azul petróleo (las franjas del logo), para el panel del estudiante. */
     public const TURQUESA = [
-        50 => '#e6f7f5',
-        100 => '#c2ece7',
-        200 => '#8fdcd3',
-        300 => '#55c6ba',
-        400 => '#26ad9f',
-        500 => '#0f9b8e',
-        600 => '#0c8276',
-        700 => '#0d695f',
-        800 => '#0f544d',
-        900 => '#0f4540',
-        950 => '#042a27',
+        50 => '#e9f6fb',
+        100 => '#cbeaf5',
+        200 => '#99d4ea',
+        300 => '#5fb8da',
+        400 => '#2f9cc4',
+        500 => '#1a86ad',
+        600 => '#13799f',
+        700 => '#11607f',
+        800 => '#114f68',
+        900 => '#103f53',
+        950 => '#082736',
     ];
 }

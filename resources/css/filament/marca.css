@@ -1,15 +1,54 @@
 /*
- * Identidad visual compartida por los tres paneles.
- * Para aplicar los colores oficiales de la institución basta con cambiar
- * estas variables (y los colores "primary" en los PanelProvider).
+ * Identidad visual compartida por los tres paneles, tomada del logo de la
+ * UPT Estado Bolívar (azul de la "P", amarillo y rojo). Si cambian los
+ * colores, actualizar también App\Support\Marca.
  */
 :root {
-    --gpnf-marino: #13294b;
-    --gpnf-marino-medio: #1d3a66;
-    --gpnf-marino-claro: #2c5288;
-    --gpnf-ambar: #f2a900;
-    --gpnf-ambar-suave: #fff4d6;
-    --gpnf-fondo: #f4f5f8;
+    --gpnf-marino: #0b1260;
+    --gpnf-marino-medio: #141f86;
+    --gpnf-marino-claro: #2433b5;
+    --gpnf-ambar: #ffd21f;
+    --gpnf-rojo: #e30613;
+    --gpnf-fondo: #f4f5f9;
+    --gpnf-franja: linear-gradient(90deg, var(--gpnf-ambar) 0 33.3%, var(--gpnf-marino-claro) 33.3% 66.6%, var(--gpnf-rojo) 66.6% 100%);
+}
+
+/* Logotipo: insignia sobre fondo blanco (el logo no es transparente) y nombre. */
+.gpnf-logo {
+    @apply flex items-center gap-3;
+}
+
+.gpnf-logo-insignia {
+    @apply flex size-11 shrink-0 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm ring-1 ring-black/5;
+
+    & img {
+        @apply h-full w-full object-contain;
+    }
+}
+
+.gpnf-logo-texto {
+    @apply flex flex-col leading-tight;
+}
+
+.gpnf-logo-nombre {
+    @apply text-[1.05rem] font-bold tracking-tight;
+}
+
+.gpnf-logo-subtitulo {
+    @apply text-[0.7rem] font-medium tracking-wide uppercase opacity-70;
+}
+
+/* En las pantallas de acceso la insignia va grande y centrada. */
+.fi-simple-header .gpnf-logo {
+    @apply flex-col gap-2 text-center;
+}
+
+.fi-simple-header .gpnf-logo-insignia {
+    @apply size-28 rounded-none bg-transparent p-0 shadow-none ring-0;
+}
+
+.fi-simple-header .fi-logo {
+    @apply h-auto!;
 }
 
 /* Fondo general algo más cálido que el gris de Filament. */
@@ -46,14 +85,18 @@
 }
 
 .fi-simple-main {
-    @apply rounded-2xl border-t-4 border-(--gpnf-ambar) shadow-2xl ring-0;
+    @apply relative overflow-hidden rounded-2xl shadow-2xl ring-0;
+
+    &::before {
+        @apply absolute inset-x-0 top-0 h-1.5 bg-(image:--gpnf-franja) content-[''];
+    }
 }
 
 .fi-simple-header-heading {
     @apply text-(--gpnf-marino) dark:text-white;
 }
 
-/* El logotipo usa currentColor: blanco sobre azul, azul sobre blanco. */
+/* El nombre usa currentColor: blanco sobre azul, azul sobre blanco. */
 .fi-simple-header .fi-logo {
     @apply text-(--gpnf-marino) dark:text-white;
 }
