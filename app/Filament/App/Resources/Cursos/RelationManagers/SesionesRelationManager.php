@@ -165,6 +165,15 @@ class SesionesRelationManager extends RelationManager
                         'record' => $this->getOwnerRecord(),
                         'sesion' => $record,
                     ])),
+                Action::make('qr')
+                    ->label('QR')
+                    ->icon(Heroicon::OutlinedQrCode)
+                    ->color('gray')
+                    ->visible(fn (SesionClase $record): bool => $record->fecha->isToday() && auth()->user()->can('registrarAsistencia', $record))
+                    ->url(fn (SesionClase $record): string => CursoResource::getUrl('qr', [
+                        'record' => $this->getOwnerRecord(),
+                        'sesion' => $record,
+                    ])),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

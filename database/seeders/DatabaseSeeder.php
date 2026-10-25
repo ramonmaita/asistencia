@@ -43,7 +43,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        Sede::create(['nombre' => 'Sede Principal']);
+        // Coordenadas aproximadas de Ciudad Bolívar: ajustarlas a la sede real
+        // para que la validación por GPS del QR dinámico sea útil.
+        Sede::create(['nombre' => 'Sede Principal', 'latitud' => 8.1222, 'longitud' => -63.5497, 'radio_metros' => 300]);
 
         $periodo = Periodo::create([
             'nombre' => '2026-II',
@@ -253,6 +255,7 @@ class DatabaseSeeder extends Seeder
                 'periodo_id' => $periodo->id,
                 'codigo' => 'Sección 01',
                 'turno' => Turno::Manana,
+                'sede_id' => Sede::value('id'),
             ]);
             $seccion->estudiantes()->attach($estudiantes->modelKeys());
             $parciales = $estudiantes->reject(fn (Estudiante $estudiante): bool => $estudiante->cedula === '30111222')->take(3);
