@@ -20,7 +20,8 @@ use OpenSpout\Reader\XLSX\Reader as LectorXlsx;
  * Columnas reconocidas (la primera fila es el encabezado, sin importar
  * mayúsculas ni acentos): cedula, nombres, apellidos, email/correo, telefono.
  * Un estudiante que ya existe en el PNF se actualiza; uno que pertenece a
- * otro PNF se reporta como error.
+ * otro PNF se reporta como error. Opcionalmente, los inscritos en la sección
+ * quedan inscritos también en todas sus unidades curriculares.
  */
 class ImportarEstudiantes
 {
@@ -37,7 +38,10 @@ class ImportarEstudiantes
         'celular' => 'telefono',
     ];
 
-    public function handle(string $rutaArchivo, Pnf $pnf, ?Seccion $seccion = null): ResultadoImportacion
+    /**
+     * @param  bool  $inscribirEnCursos  Inscribe también en todas las unidades curriculares de la sección.
+     */
+    public function handle(string $rutaArchivo, Pnf $pnf, ?Seccion $seccion = null, bool $inscribirEnCursos = false): ResultadoImportacion
     {
         if ($seccion && $seccion->pnf_id !== $pnf->getKey()) {
             throw new InvalidArgumentException('La sección no pertenece al PNF.');
@@ -67,7 +71,7 @@ class ImportarEstudiantes
                 continue;
             }
 
-            $this->importarFila($numeroFila, $datos, $pnf, $seccion, $resultado, $cedulasVistas);
+            $this->importarFila($numeroFila, $datos, $pnf, $seccion, $inscribirEnCursos, $resultado, $cedulasVistas);
         }
 
         return $resultado;
@@ -77,7 +81,7 @@ class ImportarEstudiantes
      * @param  array<string, ?string>  $datos
      * @param  array<string, true>  $cedulasVistas
      */
-    private function importarFila(int $numeroFila, array $datos, Pnf $pnf, ?Seccion $seccion, ResultadoImportacion $resultado, array &$cedulasVistas): void
+    private function importarFila(int $numeroFila, array $datos, Pnf $pnf, ?Seccion $seccion, bool $inscribirEnCursos, ResultadoImportacion $resultado, array &$cedulasVistas): void
     {
         $datos['cedula'] = $this->limpiarCedula($datos['cedula']);
 
@@ -134,6 +138,10 @@ class ImportarEstudiantes
 
         if ($seccion) {
             $resultado->inscritos += count($seccion->estudiantes()->syncWithoutDetaching([$estudiante->getKey()])['attached']);
+
+            if ($inscribirEnCursos) {
+                $seccion->inscribirEnSusCursos([$estudiante->getKey()]);
+            }
         }
     }
 

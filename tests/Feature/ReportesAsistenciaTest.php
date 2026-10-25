@@ -119,7 +119,7 @@ class ReportesAsistenciaTest extends TestCase
     private function inscrito(Curso $curso, string $apellidos): Estudiante
     {
         $estudiante = Estudiante::factory()->for($curso->pnf)->create(['apellidos' => $apellidos]);
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return $estudiante;
     }

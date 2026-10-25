@@ -151,6 +151,8 @@ class DatabaseSeeder extends Seeder
     /**
      * Crea los trayectos con sus unidades curriculares, una sección del
      * Trayecto I con los estudiantes inscritos y sus cursos con horario.
+     * Casi todos cursan todas las unidades de la sección; los tres primeros
+     * (sin contar a María) solo cursan la primera, como quien va atrasado.
      *
      * @param  Collection<int, Estudiante>  $estudiantes
      * @param  array<string, array<int, array{0: string, 1: string, 2?: bool}>>  $plan
@@ -194,6 +196,7 @@ class DatabaseSeeder extends Seeder
                 'turno' => Turno::Manana,
             ]);
             $seccion->estudiantes()->attach($estudiantes->modelKeys());
+            $parciales = $estudiantes->reject(fn (Estudiante $estudiante): bool => $estudiante->cedula === '30111222')->take(3);
 
             foreach ($trayecto->unidadesCurriculares()->withoutGlobalScopes()->get() as $indice => $unidadCurricular) {
                 $curso = Curso::create([
@@ -202,6 +205,7 @@ class DatabaseSeeder extends Seeder
                     'unidad_curricular_id' => $unidadCurricular->id,
                 ]);
                 $curso->docentes()->attach($docente);
+                $curso->estudiantes()->attach(($indice === 0 ? $estudiantes : $estudiantes->diff($parciales))->modelKeys());
                 $curso->horarios()->create([
                     'dia_semana' => DiaSemana::from($indice + 1),
                     'hora_inicio' => '08:00',

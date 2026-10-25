@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
- * Unidad curricular dictada en una sección: tiene docentes y horario,
- * y sus estudiantes son los inscritos en la sección.
+ * Unidad curricular dictada en una sección: tiene docentes, horario y
+ * sus propios estudiantes inscritos.
  */
 #[Fillable(['pnf_id', 'seccion_id', 'unidad_curricular_id'])]
 class Curso extends Model
@@ -49,11 +49,12 @@ class Curso extends Model
     }
 
     /**
-     * Estudiantes inscritos en la sección del curso.
+     * Estudiantes inscritos en esta unidad curricular (no necesariamente
+     * todos los de la sección).
      */
     public function estudiantes(): BelongsToMany
     {
-        return $this->belongsToMany(Estudiante::class, 'estudiante_seccion', 'seccion_id', 'estudiante_id', 'seccion_id');
+        return $this->belongsToMany(Estudiante::class)->withTimestamps();
     }
 
     /**
@@ -72,7 +73,7 @@ class Curso extends Model
 
     public function scopeCursadosPor(Builder $query, Estudiante $estudiante): void
     {
-        $query->whereHas('seccion.estudiantes', fn (Builder $estudiantes) => $estudiantes->whereKey($estudiante->getKey()));
+        $query->whereHas('estudiantes', fn (Builder $estudiantes) => $estudiantes->whereKey($estudiante->getKey()));
     }
 
     public function scopeDictadosPor(Builder $query, User $docente): void

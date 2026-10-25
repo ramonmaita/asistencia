@@ -92,6 +92,14 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
         return $this->belongsToMany(Seccion::class)->withTimestamps();
     }
 
+    /**
+     * Unidades curriculares (cursos) que cursa.
+     */
+    public function cursos(): BelongsToMany
+    {
+        return $this->belongsToMany(Curso::class)->withTimestamps();
+    }
+
     public function asistencias(): HasMany
     {
         return $this->hasMany(Asistencia::class);

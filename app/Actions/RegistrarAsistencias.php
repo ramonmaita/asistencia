@@ -30,7 +30,7 @@ class RegistrarAsistencias
         $ajenos = array_diff(array_keys($estados), $inscritos);
 
         if ($ajenos !== []) {
-            throw new InvalidArgumentException('Hay estudiantes que no están inscritos en la sección del curso.');
+            throw new InvalidArgumentException('Hay estudiantes que no están inscritos en el curso.');
         }
 
         DB::transaction(function () use ($sesion, $estados, $registrador, $metodo) {

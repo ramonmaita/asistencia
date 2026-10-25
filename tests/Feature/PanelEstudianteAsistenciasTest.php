@@ -22,16 +22,19 @@ class PanelEstudianteAsistenciasTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_lista_solo_los_cursos_de_sus_secciones(): void
+    public function test_lista_solo_los_cursos_en_los_que_esta_inscrito(): void
     {
         [$curso, $estudiante] = $this->cursoConEstudiante();
         $deOtraSeccion = Curso::factory()->for(Seccion::factory()->for($curso->seccion->trayecto))->create();
+        $deSuSeccionSinInscribir = Curso::factory()->for($curso->seccion)->create();
+        $curso->seccion->estudiantes()->attach($estudiante);
 
         $this->entrarComoEstudiante($estudiante);
 
         Livewire::test(ListCursos::class)
             ->assertCanSeeTableRecords([$curso])
-            ->assertCanNotSeeTableRecords([$deOtraSeccion]);
+            ->assertCanNotSeeTableRecords([$deOtraSeccion, $deSuSeccionSinInscribir]);
+        $this->get("/estudiante/cursos/{$deSuSeccionSinInscribir->id}")->assertNotFound();
     }
 
     public function test_muestra_el_porcentaje_y_el_estado_del_curso(): void
@@ -91,7 +94,7 @@ class PanelEstudianteAsistenciasTest extends TestCase
         $pnf = Pnf::factory()->create();
         $curso = Curso::factory()->for(Seccion::factory()->for(Trayecto::factory()->for($pnf)))->create();
         $estudiante = Estudiante::factory()->for($pnf)->create();
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return [$curso, $estudiante];
     }

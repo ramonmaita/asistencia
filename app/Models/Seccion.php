@@ -54,4 +54,29 @@ class Seccion extends Model
     {
         return $this->hasMany(Curso::class);
     }
+
+    /**
+     * Inscribe a los estudiantes en todas las unidades curriculares de la sección.
+     *
+     * @param  array<int, int>  $estudianteIds
+     */
+    public function inscribirEnSusCursos(array $estudianteIds): void
+    {
+        foreach ($this->cursos as $curso) {
+            $curso->estudiantes()->syncWithoutDetaching($estudianteIds);
+        }
+    }
+
+    /**
+     * Retira a los estudiantes de las unidades curriculares de la sección
+     * (su historial de asistencia se conserva).
+     *
+     * @param  array<int, int>  $estudianteIds
+     */
+    public function retirarDeSusCursos(array $estudianteIds): void
+    {
+        foreach ($this->cursos as $curso) {
+            $curso->estudiantes()->detach($estudianteIds);
+        }
+    }
 }

@@ -64,6 +64,23 @@ class RegistrarAsistenciaTest extends TestCase
         $this->assertSame($pnf->id, $asistencia->pnf_id);
     }
 
+    public function test_solo_lista_a_los_inscritos_en_la_unidad_curricular(): void
+    {
+        [$pnf, $curso, $docente] = $this->cursoConDocente();
+        [$maria] = $this->inscribir($curso, 1);
+        $juan = Estudiante::factory()->for($pnf)->create();
+        $curso->seccion->estudiantes()->attach([$maria->id, $juan->id]);
+        $sesion = SesionClase::factory()->for($curso)->create(['fecha' => '2026-10-19']);
+
+        $this->entrarAlPanel($docente, $pnf);
+
+        Livewire::test(RegistrarAsistencia::class, ['record' => $curso->id, 'sesion' => $sesion->id])
+            ->assertSchemaStateSet(['estados' => [$maria->id => 'presente']])
+            ->call('guardar');
+
+        $this->assertSame([$maria->id], $sesion->asistencias()->pluck('estudiante_id')->all());
+    }
+
     public function test_marca_a_todos_ausentes_con_la_accion_masiva(): void
     {
         [$pnf, $curso, $docente] = $this->cursoConDocente();
@@ -260,7 +277,7 @@ class RegistrarAsistenciaTest extends TestCase
         $estudiantes = Estudiante::factory()->count($cantidad)->for($curso->pnf)->sequence(
             ...array_map(fn (int $i): array => ['apellidos' => "Apellido {$i}"], range(1, $cantidad)),
         )->create();
-        $curso->seccion->estudiantes()->attach($estudiantes);
+        $curso->estudiantes()->attach($estudiantes);
 
         return $estudiantes->all();
     }

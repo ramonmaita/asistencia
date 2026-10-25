@@ -67,7 +67,7 @@ class NotificarInasistenciasTest extends TestCase
         [$curso, $estudiante] = $this->escenario();
         $this->registrar($curso, $estudiante, ['presente', 'presente']);
         $cursoViejo = Curso::factory()->for(Seccion::factory()->for($curso->seccion->trayecto)->for(Periodo::factory()))->create();
-        $cursoViejo->seccion->estudiantes()->attach($estudiante);
+        $cursoViejo->estudiantes()->attach($estudiante);
         $this->registrar($cursoViejo, $estudiante, ['ausente']);
 
         $this->artisan('asistencias:notificar-inasistencias')->assertSuccessful();
@@ -100,7 +100,7 @@ class NotificarInasistenciasTest extends TestCase
             ->hasAttached($docente, relationship: 'docentes')
             ->create();
         $estudiante = Estudiante::factory()->for($pnf)->create();
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return [$curso, $estudiante, $docente, $coordinador];
     }

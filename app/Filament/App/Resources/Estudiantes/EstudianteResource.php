@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Estudiantes;
 use App\Filament\App\Resources\Estudiantes\Pages\CreateEstudiante;
 use App\Filament\App\Resources\Estudiantes\Pages\EditEstudiante;
 use App\Filament\App\Resources\Estudiantes\Pages\ListEstudiantes;
+use App\Filament\App\Resources\Estudiantes\RelationManagers\CursosRelationManager;
 use App\Filament\App\Resources\Estudiantes\Schemas\EstudianteForm;
 use App\Filament\App\Resources\Estudiantes\Tables\EstudiantesTable;
 use App\Models\Estudiante;
@@ -40,7 +41,7 @@ class EstudianteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            CursosRelationManager::class,
         ];
     }
 

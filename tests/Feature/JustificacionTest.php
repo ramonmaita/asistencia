@@ -111,7 +111,7 @@ class JustificacionTest extends TestCase
     {
         [$curso, $estudiante] = $this->cursoConEstudiante();
         $companero = Estudiante::factory()->for($curso->pnf)->create();
-        $curso->seccion->estudiantes()->attach($companero);
+        $curso->estudiantes()->attach($companero);
         $propia = $this->asistencia($curso, $estudiante, 'ausente');
         $ajena = $this->asistencia($curso, $companero, 'ausente');
 
@@ -202,7 +202,7 @@ class JustificacionTest extends TestCase
             ->hasAttached($docente, relationship: 'docentes')
             ->create();
         $estudiante = Estudiante::factory()->for($pnf)->create();
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return [$curso, $estudiante, $docente];
     }
