@@ -92,4 +92,9 @@ class Pnf extends Model implements HasName
     {
         return $this->hasMany(Justificacion::class);
     }
+
+    public function proyectos(): HasMany
+    {
+        return $this->hasMany(Proyecto::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\Enums\EstadoJustificacion;
 use App\Filament\Estudiante\Resources\Justificaciones\JustificacionResource as JustificacionesDelEstudiante;
 use App\Models\Justificacion;
 use App\Models\SesionClase;
+use App\Models\Tutoria;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -28,6 +29,7 @@ class JustificacionesTable
                 'revisor',
                 'asistencia.sesionable' => fn (MorphTo $sesionable) => $sesionable->morphWith([
                     SesionClase::class => ['curso.unidadCurricular', 'curso.seccion'],
+                    Tutoria::class => ['proyecto'],
                 ]),
             ]))
             ->columns([

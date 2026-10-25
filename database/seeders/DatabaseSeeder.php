@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\AgregarIntegrantes;
 use App\Actions\GenerarSesionesClase;
 use App\Actions\RegistrarAsistencias;
 use App\Enums\DiaSemana;
@@ -9,12 +10,14 @@ use App\Enums\EstadoAsistencia;
 use App\Enums\ModalidadProyecto;
 use App\Enums\RolPnf;
 use App\Enums\Turno;
+use App\Enums\VeredictoProyecto;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Feriado;
 use App\Models\Justificacion;
 use App\Models\Periodo;
 use App\Models\Pnf;
+use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\Sede;
 use App\Models\SesionClase;
@@ -97,6 +100,52 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->registrarAsistencias($docente, $maria);
+        $this->crearProyectos($docente, $maria);
+    }
+
+    /**
+     * Arma grupos de proyecto en los cursos de la UC Proyecto con sus
+     * tutorías semanales (hasta ayer) y la asistencia de los integrantes.
+     * El primer grupo de Informática (el de María) ya tiene un veredicto.
+     */
+    private function crearProyectos(User $docente, Estudiante $maria): void
+    {
+        $registrar = app(RegistrarAsistencias::class);
+        $titulos = ['Sistema de control de inventario para el consejo comunal', 'Plataforma de citas para el ambulatorio', 'Registro digital de la biblioteca escolar', 'Gestión de la cooperativa de transporte'];
+
+        foreach (Curso::query()->deProyecto()->with(['estudiantes', 'seccion.trayecto', 'seccion.periodo'])->get() as $curso) {
+            $trayecto = $curso->seccion->trayecto;
+            $estudiantes = $curso->estudiantes->sortByDesc(fn (Estudiante $estudiante): bool => $estudiante->is($maria))->values();
+
+            foreach ($estudiantes->chunk($trayecto->max_integrantes)->take(3) as $numero => $grupo) {
+                $proyecto = Proyecto::create([
+                    'pnf_id' => $curso->pnf_id,
+                    'curso_id' => $curso->id,
+                    'titulo' => $titulos[$numero % count($titulos)],
+                    'comunidad' => 'Consejo comunal '.fake()->lastName(),
+                    'tutor_comunitario' => fake()->name(),
+                    'tutor_comunitario_contacto' => '0414-'.fake()->numerify('#######'),
+                ]);
+                app(AgregarIntegrantes::class)->handle($proyecto, $grupo->modelKeys());
+
+                for ($fecha = $curso->seccion->periodo->fecha_inicio->copy()->next('Thursday'); $fecha->lt(today()); $fecha->addWeek()) {
+                    $tutoria = $proyecto->tutorias()->create([
+                        'pnf_id' => $curso->pnf_id,
+                        'fecha' => $fecha->toDateString(),
+                        'hora_inicio' => '14:00',
+                        'hora_fin' => '15:30',
+                        'tema' => fake()->randomElement(['Diagnóstico comunitario', 'Plan de acción', 'Revisión del prototipo', 'Avance del informe']),
+                    ]);
+
+                    $registrar->handle($tutoria, $grupo->mapWithKeys(fn (Estudiante $estudiante): array => [
+                        $estudiante->id => fake()->boolean(12) ? EstadoAsistencia::Ausente : EstadoAsistencia::Presente,
+                    ])->all(), $docente);
+                }
+            }
+        }
+
+        Proyecto::query()->conIntegrante($maria)->first()?->integrantes()->whereBelongsTo($maria)->first()
+            ?->registrarVeredicto(VeredictoProyecto::Aprobado, $docente, 'Cumplió con todas las entregas.');
     }
 
     /**

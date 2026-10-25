@@ -2,15 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Actions\AgregarIntegrantes;
 use App\Enums\NivelInasistencia;
 use App\Models\Asistencia;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Periodo;
 use App\Models\Pnf;
+use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\SesionClase;
 use App\Models\Trayecto;
+use App\Models\Tutoria;
 use App\Models\User;
 use App\Notifications\NivelInasistenciaAlcanzado;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,6 +76,25 @@ class NotificarInasistenciasTest extends TestCase
         $this->artisan('asistencias:notificar-inasistencias')->assertSuccessful();
 
         Notification::assertNothingSent();
+    }
+
+    public function test_avisa_por_separado_la_inasistencia_a_tutorias(): void
+    {
+        [$curso, $estudiante, $docente] = $this->escenario();
+        $curso->seccion->trayecto->update(['umbral_inasistencia_tutorias' => 25]);
+        $proyecto = Proyecto::factory()->for($curso)->create(['titulo' => 'Huerto escolar']);
+        app(AgregarIntegrantes::class)->handle($proyecto, [$estudiante->id]);
+        Asistencia::factory()->for(Tutoria::factory()->for($proyecto)->realizada(), 'sesionable')->for($estudiante)->ausente()->create();
+        Notification::fake();
+
+        $this->artisan('asistencias:notificar-inasistencias')->assertSuccessful();
+        $this->artisan('asistencias:notificar-inasistencias')->assertSuccessful();
+
+        Notification::assertSentToTimes($docente, NivelInasistenciaAlcanzado::class, 1);
+        Notification::assertSentTo($estudiante, NivelInasistenciaAlcanzado::class, fn (NivelInasistenciaAlcanzado $aviso): bool => $aviso->esDeTutorias()
+            && $aviso->nivel === NivelInasistencia::Superado
+            && str_contains($aviso->toMail($estudiante)->introLines[0], 'tutorías del proyecto «Huerto escolar»'));
+        $this->assertDatabaseHas('avisos_inasistencia', ['estudiante_id' => $estudiante->id, 'ambito' => 'tutorias', 'nivel' => 'superado']);
     }
 
     public function test_los_avisos_llegan_a_la_bandeja_y_al_correo(): void

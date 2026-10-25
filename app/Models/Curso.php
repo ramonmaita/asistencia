@@ -43,6 +43,19 @@ class Curso extends Model
         return $this->hasMany(Horario::class)->orderBy('dia_semana')->orderBy('hora_inicio');
     }
 
+    /**
+     * Proyectos del curso (solo en cursos de la UC Proyecto).
+     */
+    public function proyectos(): HasMany
+    {
+        return $this->hasMany(Proyecto::class);
+    }
+
+    public function scopeDeProyecto(Builder $query): void
+    {
+        $query->whereHas('unidadCurricular', fn (Builder $unidades) => $unidades->where('es_proyecto', true));
+    }
+
     public function sesiones(): HasMany
     {
         return $this->hasMany(SesionClase::class);

@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Collection;
 
 /**
  * Una clase concreta de un curso (fecha y hora).
@@ -53,6 +55,23 @@ class SesionClase extends Model implements Sesionable
     public function scopeRealizadas(Builder $query): void
     {
         $query->where('estado', EstadoSesion::Realizada);
+    }
+
+    public function participantes(): BelongsToMany
+    {
+        return $this->curso->estudiantes();
+    }
+
+    public function responsables(): Collection
+    {
+        return $this->curso->docentes;
+    }
+
+    public function marcarRealizada(): void
+    {
+        if ($this->estado !== EstadoSesion::Realizada) {
+            $this->update(['estado' => EstadoSesion::Realizada]);
+        }
     }
 
     public function esGestionadaPor(User $user): bool

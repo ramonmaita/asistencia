@@ -4,9 +4,12 @@ namespace App\Notifications;
 
 use App\Enums\NivelInasistencia;
 use App\Filament\App\Resources\Cursos\CursoResource;
+use App\Filament\App\Resources\Proyectos\ProyectoResource;
 use App\Filament\Estudiante\Resources\Cursos\CursoResource as CursoDelEstudianteResource;
+use App\Filament\Estudiante\Resources\Proyectos\ProyectoResource as ProyectoDelEstudianteResource;
 use App\Models\Curso;
 use App\Models\Estudiante;
+use App\Models\Proyecto;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Support\Icons\Heroicon;
@@ -16,8 +19,9 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Aviso de que un estudiante llegó a "en riesgo" o superó el umbral de
- * inasistencia en un curso. Lo reciben el estudiante, los docentes del
- * curso y los coordinadores del PNF, con un texto distinto para cada uno.
+ * inasistencia en un curso: a sus clases o, si se indica el proyecto, a sus
+ * tutorías. Lo reciben el estudiante, los docentes del curso y los
+ * coordinadores del PNF, con un texto distinto para cada uno.
  */
 class NivelInasistenciaAlcanzado extends Notification
 {
@@ -28,7 +32,13 @@ class NivelInasistenciaAlcanzado extends Notification
         public Estudiante $estudiante,
         public NivelInasistencia $nivel,
         public float $porcentaje,
+        public ?Proyecto $proyecto = null,
     ) {}
+
+    public function esDeTutorias(): bool
+    {
+        return $this->proyecto !== null;
+    }
 
     /**
      * @return array<int, string>
@@ -76,28 +86,40 @@ class NivelInasistenciaAlcanzado extends Notification
 
     private function titulo(object $notifiable): string
     {
+        $a = $this->esDeTutorias() ? ' a tutorías' : '';
         $situacion = $this->nivel === NivelInasistencia::Superado
-            ? 'superó el límite de inasistencias'
-            : 'está en riesgo por inasistencias';
+            ? "superó el límite de inasistencias{$a}"
+            : "está en riesgo por inasistencias{$a}";
 
         return $notifiable instanceof Estudiante
-            ? ($this->nivel === NivelInasistencia::Superado ? 'Superaste el límite de inasistencias' : 'Estás en riesgo por inasistencias')
+            ? ($this->nivel === NivelInasistencia::Superado ? "Superaste el límite de inasistencias{$a}" : "Estás en riesgo por inasistencias{$a}")
             : "{$this->estudiante->getFilamentName()} {$situacion}";
     }
 
     private function mensaje(object $notifiable): string
     {
         $porcentaje = number_format($this->porcentaje, 2, ',', '.').' %';
-        $umbral = number_format((float) $this->curso->pnf->umbral_inasistencia_clases, 2, ',', '.').' %';
-        $curso = "{$this->curso->unidadCurricular->nombre} (sección {$this->curso->seccion->codigo})";
+        $umbral = number_format((float) ($this->esDeTutorias()
+            ? $this->curso->seccion->trayecto->umbral_inasistencia_tutorias
+            : $this->curso->pnf->umbral_inasistencia_clases), 2, ',', '.').' %';
+        $donde = $this->esDeTutorias()
+            ? "las tutorías del proyecto «{$this->proyecto->titulo}» ({$this->curso->unidadCurricular->nombre}, sección {$this->curso->seccion->codigo})"
+            : "{$this->curso->unidadCurricular->nombre} (sección {$this->curso->seccion->codigo})";
+        $limite = $this->esDeTutorias() ? 'El límite del trayecto' : 'El límite del PNF';
 
         return $notifiable instanceof Estudiante
-            ? "Tienes {$porcentaje} de inasistencias en {$curso}. El límite del PNF es {$umbral}."
-            : "{$this->estudiante->getFilamentName()} (C.I. {$this->estudiante->cedula}) tiene {$porcentaje} de inasistencias en {$curso}. El límite del PNF es {$umbral}.";
+            ? "Tienes {$porcentaje} de inasistencias en {$donde}. {$limite} es {$umbral}."
+            : "{$this->estudiante->getFilamentName()} (C.I. {$this->estudiante->cedula}) tiene {$porcentaje} de inasistencias en {$donde}. {$limite} es {$umbral}.";
     }
 
     private function url(object $notifiable): string
     {
+        if ($this->esDeTutorias()) {
+            return $notifiable instanceof Estudiante
+                ? ProyectoDelEstudianteResource::getUrl('view', ['record' => $this->proyecto], panel: 'estudiante')
+                : ProyectoResource::getUrl('view', ['record' => $this->proyecto], panel: 'app', tenant: $this->curso->pnf);
+        }
+
         return $notifiable instanceof Estudiante
             ? CursoDelEstudianteResource::getUrl('view', ['record' => $this->curso], panel: 'estudiante')
             : CursoResource::getUrl('view', ['record' => $this->curso], panel: 'app', tenant: $this->curso->pnf);

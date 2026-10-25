@@ -100,6 +100,11 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
         return $this->belongsToMany(Curso::class)->withTimestamps();
     }
 
+    public function proyectos(): BelongsToMany
+    {
+        return $this->belongsToMany(Proyecto::class, 'integrantes_proyecto')->withTimestamps();
+    }
+
     public function asistencias(): HasMany
     {
         return $this->hasMany(Asistencia::class);

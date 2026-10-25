@@ -7,6 +7,7 @@ use App\Filament\Estudiante\Resources\Concerns\SoloLectura;
 use App\Filament\Estudiante\Resources\Justificaciones\Pages\ListJustificaciones;
 use App\Models\Justificacion;
 use App\Models\SesionClase;
+use App\Models\Tutoria;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -46,6 +47,7 @@ class JustificacionResource extends Resource
             ->with([
                 'asistencia.sesionable' => fn (MorphTo $sesionable) => $sesionable->morphWith([
                     SesionClase::class => ['curso.unidadCurricular'],
+                    Tutoria::class => ['proyecto'],
                 ]),
             ]);
     }

@@ -4,9 +4,9 @@ namespace App\Actions;
 
 use App\Filament\App\Resources\Justificaciones\JustificacionResource;
 use App\Models\Asistencia;
+use App\Models\Contracts\Sesionable;
 use App\Models\Estudiante;
 use App\Models\Justificacion;
-use App\Models\SesionClase;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Registra la solicitud de justificación de una inasistencia propia del
- * estudiante y avisa a los docentes del curso.
+ * estudiante (de una clase o de una tutoría) y avisa a los docentes a cargo.
  */
 class SolicitarJustificacion
 {
@@ -34,20 +34,19 @@ class SolicitarJustificacion
             'soporte_nombre' => $soporteNombre,
         ]);
 
+        /** @var Sesionable $sesion */
         $sesion = $asistencia->sesionable;
 
-        if ($sesion instanceof SesionClase) {
-            Notification::make()
-                ->title('Nueva justificación por revisar')
-                ->body("{$estudiante->getFilamentName()} · {$sesion->descripcion()}")
-                ->icon(Heroicon::OutlinedDocumentCheck)
-                ->actions([
-                    Action::make('revisar')
-                        ->label('Revisar')
-                        ->url(JustificacionResource::getUrl(panel: 'app', tenant: $sesion->curso->pnf)),
-                ])
-                ->sendToDatabase($sesion->curso->docentes);
-        }
+        Notification::make()
+            ->title('Nueva justificación por revisar')
+            ->body("{$estudiante->getFilamentName()} · {$sesion->descripcion()}")
+            ->icon(Heroicon::OutlinedDocumentCheck)
+            ->actions([
+                Action::make('revisar')
+                    ->label('Revisar')
+                    ->url(JustificacionResource::getUrl(panel: 'app', tenant: $estudiante->pnf)),
+            ])
+            ->sendToDatabase($sesion->responsables());
 
         return $justificacion;
     }
