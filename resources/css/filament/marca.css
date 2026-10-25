@@ -1,0 +1,59 @@
+/*
+ * Identidad visual compartida por los tres paneles.
+ * Para aplicar los colores oficiales de la institución basta con cambiar
+ * estas variables (y los colores "primary" en los PanelProvider).
+ */
+:root {
+    --gpnf-marino: #13294b;
+    --gpnf-marino-medio: #1d3a66;
+    --gpnf-marino-claro: #2c5288;
+    --gpnf-ambar: #f2a900;
+    --gpnf-ambar-suave: #fff4d6;
+    --gpnf-fondo: #f4f5f8;
+}
+
+/* Fondo general algo más cálido que el gris de Filament. */
+.fi-body {
+    @apply bg-(--gpnf-fondo) dark:bg-gray-950;
+}
+
+/* Títulos de página en azul institucional, con más peso. */
+.fi-header-heading {
+    @apply font-bold tracking-tight text-(--gpnf-marino) dark:text-white;
+}
+
+/* Tarjetas (secciones, tablas, widgets): bordes suaves y sombra ligera. */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+    @apply rounded-xl shadow-sm ring-gray-950/[0.07];
+}
+
+.fi-section-header-heading,
+.fi-ta-header-heading {
+    @apply font-semibold text-(--gpnf-marino) dark:text-white;
+}
+
+/* Encabezados de tabla en versalitas sobre un tono azulado. */
+.fi-ta-header-cell,
+.fi-ta-header-cell .fi-ta-header-cell-sort-btn {
+    @apply bg-slate-50 text-xs font-semibold tracking-wide text-slate-600 uppercase dark:bg-white/5 dark:text-gray-300;
+}
+
+/* Pantallas de acceso: fondo azul con una franja ámbar y tarjeta blanca. */
+.fi-simple-layout {
+    @apply bg-(--gpnf-marino) bg-[radial-gradient(ellipse_at_top,var(--gpnf-marino-claro),var(--gpnf-marino)_60%)];
+}
+
+.fi-simple-main {
+    @apply rounded-2xl border-t-4 border-(--gpnf-ambar) shadow-2xl ring-0;
+}
+
+.fi-simple-header-heading {
+    @apply text-(--gpnf-marino) dark:text-white;
+}
+
+/* El logotipo usa currentColor: blanco sobre azul, azul sobre blanco. */
+.fi-simple-header .fi-logo {
+    @apply text-(--gpnf-marino) dark:text-white;
+}

@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\EstablecerPnfDelPanel;
 use App\Models\Pnf;
+use App\Support\Marca;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,13 +35,20 @@ class AppPanelProvider extends PanelProvider
             ->path('app')
             ->login()
             ->brandName('Gestión PNF')
+            ->brandLogo(fn () => view('filament.logo', ['subtitulo' => 'Académico']))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('images/favicon.svg'))
+            ->font('Source Sans 3')
+            ->viteTheme('resources/css/filament/institucional/theme.css')
+            ->topbar(false)
             ->tenant(Pnf::class, slugAttribute: 'slug')
             ->tenantMiddleware([
                 EstablecerPnfDelPanel::class,
             ], isPersistent: true)
             ->databaseNotifications()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Marca::MARINO,
+                'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')

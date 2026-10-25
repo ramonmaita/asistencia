@@ -1,0 +1,128 @@
+/*
+ * Tema de los paneles de administración y académico: barra lateral azul
+ * marino de alto completo con acento ámbar en el elemento activo.
+ */
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../marca.css';
+
+@source '../../../../app/Filament/Admin/**/*';
+@source '../../../../app/Filament/App/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+.fi-sidebar {
+    @apply bg-(--gpnf-marino) lg:bg-(--gpnf-marino) dark:bg-gray-900 dark:lg:bg-gray-900;
+}
+
+:not(.fi-body-has-topbar) .fi-sidebar-header {
+    @apply border-b border-white/10;
+}
+
+.fi-sidebar .fi-logo {
+    @apply text-white;
+}
+
+.fi-sidebar-header-controls {
+    @apply after:border-white/10;
+}
+
+/* Selector de PNF */
+.fi-sidebar .fi-tenant-menu-trigger {
+    @apply text-white hover:bg-white/10 focus-visible:bg-white/10;
+
+    & .fi-icon {
+        @apply text-white/60;
+    }
+}
+
+.fi-sidebar .fi-tenant-menu-trigger-current-tenant-label {
+    @apply text-white/60;
+}
+
+.fi-sidebar .fi-tenant-menu-trigger-tenant-name {
+    @apply text-white;
+}
+
+/* Grupos y elementos de navegación */
+.fi-sidebar-group-label,
+.fi-sidebar-group-btn .fi-icon {
+    @apply text-xs font-semibold tracking-wider text-white/50 uppercase;
+}
+
+.fi-sidebar-group-dropdown-trigger-btn {
+    @apply hover:bg-white/10 focus-visible:bg-white/10;
+
+    & .fi-icon {
+        @apply text-white/70;
+    }
+}
+
+.fi-sidebar-item-btn > .fi-icon {
+    @apply text-white/60;
+}
+
+.fi-sidebar-item-label {
+    @apply text-white/85;
+}
+
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn {
+    @apply hover:bg-white/10 focus-visible:bg-white/10;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    @apply bg-white/10 shadow-[inset_3px_0_0_var(--gpnf-ambar)];
+
+    & > .fi-icon {
+        @apply text-(--gpnf-ambar);
+    }
+
+    & > .fi-sidebar-item-label {
+        @apply font-semibold text-white;
+    }
+}
+
+.fi-sidebar-item-grouped-border-part-not-first,
+.fi-sidebar-item-grouped-border-part-not-last {
+    @apply bg-white/20;
+}
+
+.fi-sidebar-item-grouped-border-part {
+    @apply bg-white/40;
+}
+
+.fi-sidebar-item.fi-active .fi-sidebar-item-grouped-border-part {
+    @apply bg-(--gpnf-ambar);
+}
+
+/* Pie: notificaciones y menú del usuario */
+.fi-sidebar-footer {
+    @apply border-white/10;
+}
+
+.fi-sidebar-database-notifications-btn {
+    @apply hover:bg-white/10 focus-visible:bg-white/10;
+
+    & > .fi-icon {
+        @apply text-white/60;
+    }
+
+    & > .fi-sidebar-database-notifications-btn-label {
+        @apply text-white/85;
+    }
+}
+
+.fi-sidebar .fi-user-menu-trigger {
+    @apply text-white hover:bg-white/10 focus-visible:bg-white/10;
+
+    & .fi-icon {
+        @apply text-white/60;
+    }
+}
+
+/* Botón para abrir la barra en el móvil */
+.fi-layout-sidebar-toggle-btn-ctn {
+    @apply bg-(--gpnf-marino) px-4 py-2;
+
+    & .fi-icon-btn {
+        @apply text-white;
+    }
+}
