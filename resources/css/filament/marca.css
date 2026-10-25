@@ -1,0 +1,119 @@
+/*
+ * Identidad visual compartida por los tres paneles, tomada del logo de la
+ * UPT Estado Bolívar: los azules de las franjas junto al puente, que van del
+ * celeste al azul petróleo casi negro y representan la transición y
+ * transformación de la universidad; el amarillo del logo es el acento.
+ * Si cambian los colores, actualizar también App\Support\Marca.
+ */
+:root {
+    /* Franjas del logo, de arriba (claro) a abajo (oscuro). */
+    --gpnf-transicion-1: #2992b5;
+    --gpnf-transicion-2: #1a88b8;
+    --gpnf-transicion-3: #0b7098;
+    --gpnf-transicion-4: #126389;
+    --gpnf-transicion-5: #084362;
+    --gpnf-transicion-6: #023852;
+    --gpnf-transicion-7: #0f2b35;
+
+    --gpnf-marino: var(--gpnf-transicion-5);
+    --gpnf-marino-medio: var(--gpnf-transicion-3);
+    --gpnf-marino-claro: var(--gpnf-transicion-2);
+    --gpnf-ambar: #ffd21f;
+    --gpnf-fondo: #f2f6f8;
+
+    /* Degradado de la transición (vertical) y franja de colores (horizontal). */
+    --gpnf-degradado: linear-gradient(180deg, var(--gpnf-transicion-3) 0%, var(--gpnf-transicion-5) 45%, var(--gpnf-transicion-6) 75%, var(--gpnf-transicion-7) 100%);
+    --gpnf-franja: linear-gradient(90deg, var(--gpnf-transicion-1) 0 14.3%, var(--gpnf-transicion-2) 14.3% 28.6%, var(--gpnf-transicion-3) 28.6% 42.9%, var(--gpnf-transicion-4) 42.9% 57.2%, var(--gpnf-transicion-5) 57.2% 71.5%, var(--gpnf-transicion-6) 71.5% 85.8%, var(--gpnf-transicion-7) 85.8% 100%);
+
+    /* Líneas horizontales como las del logo, para superponer a un fondo. */
+    --gpnf-lineas: repeating-linear-gradient(180deg, transparent 0 18px, rgb(255 255 255 / 0.07) 18px 22px);
+}
+
+/* Logotipo: insignia sobre fondo blanco (el logo no es transparente) y nombre. */
+.gpnf-logo {
+    @apply flex items-center gap-3;
+}
+
+.gpnf-logo-insignia {
+    @apply flex size-11 shrink-0 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm ring-1 ring-black/5;
+
+    & img {
+        @apply h-full w-full object-contain;
+    }
+}
+
+.gpnf-logo-texto {
+    @apply flex flex-col leading-tight;
+}
+
+.gpnf-logo-nombre {
+    @apply text-[1.05rem] font-bold tracking-tight;
+}
+
+.gpnf-logo-subtitulo {
+    @apply text-[0.7rem] font-medium tracking-wide uppercase opacity-70;
+}
+
+/* En las pantallas de acceso la insignia va grande y centrada. */
+.fi-simple-header .gpnf-logo {
+    @apply flex-col gap-2 text-center;
+}
+
+.fi-simple-header .gpnf-logo-insignia {
+    @apply size-28 rounded-none bg-transparent p-0 shadow-none ring-0;
+}
+
+.fi-simple-header .fi-logo {
+    @apply h-auto!;
+}
+
+/* Fondo general algo más cálido que el gris de Filament. */
+.fi-body {
+    @apply bg-(--gpnf-fondo) dark:bg-gray-950;
+}
+
+/* Títulos de página en azul institucional, con más peso. */
+.fi-header-heading {
+    @apply font-bold tracking-tight text-(--gpnf-marino) dark:text-white;
+}
+
+/* Tarjetas (secciones, tablas, widgets): bordes suaves y sombra ligera. */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+    @apply rounded-xl shadow-sm ring-gray-950/[0.07];
+}
+
+.fi-section-header-heading,
+.fi-ta-header-heading {
+    @apply font-semibold text-(--gpnf-marino) dark:text-white;
+}
+
+/* Encabezados de tabla en versalitas sobre un tono azulado. */
+.fi-ta-header-cell,
+.fi-ta-header-cell .fi-ta-header-cell-sort-btn {
+    @apply bg-slate-50 text-xs font-semibold tracking-wide text-slate-600 uppercase dark:bg-white/5 dark:text-gray-300;
+}
+
+/* Pantallas de acceso: degradado de la transición con las líneas del logo. */
+.fi-simple-layout {
+    background-color: var(--gpnf-marino);
+    background-image: var(--gpnf-lineas), var(--gpnf-degradado);
+}
+
+.fi-simple-main {
+    @apply relative overflow-hidden rounded-2xl shadow-2xl ring-0;
+
+    &::before {
+        @apply absolute inset-x-0 top-0 h-1.5 bg-(image:--gpnf-franja) content-[''];
+    }
+}
+
+.fi-simple-header-heading {
+    @apply text-(--gpnf-marino) dark:text-white;
+}
+
+/* El nombre usa currentColor: blanco sobre azul, azul sobre blanco. */
+.fi-simple-header .fi-logo {
+    @apply text-(--gpnf-marino) dark:text-white;
+}

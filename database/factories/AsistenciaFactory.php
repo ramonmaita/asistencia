@@ -8,6 +8,7 @@ use App\Models\Asistencia;
 use App\Models\Estudiante;
 use App\Models\SesionClase;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * @extends Factory<Asistencia>
@@ -19,7 +20,7 @@ class AsistenciaFactory extends Factory
         return [
             'sesionable_type' => (new SesionClase)->getMorphClass(),
             'sesionable_id' => SesionClase::factory()->realizada(),
-            'pnf_id' => fn (array $attributes) => SesionClase::withoutGlobalScopes()->find($attributes['sesionable_id'])->pnf_id,
+            'pnf_id' => fn (array $attributes) => Relation::getMorphedModel($attributes['sesionable_type'])::withoutGlobalScopes()->find($attributes['sesionable_id'])->pnf_id,
             'estudiante_id' => fn (array $attributes) => Estudiante::factory()->create(['pnf_id' => $attributes['pnf_id']]),
             'estado' => EstadoAsistencia::Presente,
             'metodo' => MetodoAsistencia::Manual,

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Support\Marca;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,8 +32,15 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('Gestión PNF · Administración')
+            ->brandLogo(fn () => view('filament.logo', ['subtitulo' => 'Administración']))
+            ->brandLogoHeight('2.75rem')
+            ->favicon(asset('images/favicon-upt.png'))
+            ->font('Source Sans 3')
+            ->viteTheme('resources/css/filament/institucional/theme.css')
+            ->topbar(false)
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => Marca::TRANSICION,
+                'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')

@@ -1,0 +1,84 @@
+/*
+ * Tema del panel del estudiante: más cercano, con navegación superior sobre
+ * la transición de azules del logo (en horizontal) y tarjetas más redondeadas.
+ */
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../marca.css';
+
+@source '../../../../app/Filament/Estudiante/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+.fi-topbar-ctn::before {
+    @apply block h-1 bg-(image:--gpnf-franja) content-[''];
+}
+
+.fi-topbar {
+    @apply bg-(--gpnf-marino) bg-[linear-gradient(100deg,var(--gpnf-transicion-2)_0%,var(--gpnf-transicion-3)_30%,var(--gpnf-transicion-5)_65%,var(--gpnf-transicion-7)_100%)] shadow-md ring-0 dark:bg-gray-900 dark:bg-none;
+
+    & .fi-logo {
+        @apply text-white;
+    }
+
+    & .fi-icon-btn {
+        @apply text-white/80 hover:text-white;
+    }
+}
+
+.fi-topbar-item-btn {
+    @apply hover:bg-white/15 focus-visible:bg-white/15;
+
+    & > .fi-icon {
+        @apply text-white/70;
+    }
+}
+
+.fi-topbar-item-label {
+    @apply text-white/90;
+}
+
+.fi-topbar-item.fi-active {
+    & .fi-topbar-item-btn {
+        @apply bg-white/15 shadow-[inset_0_-3px_0_var(--gpnf-ambar)];
+
+        & > .fi-icon {
+            @apply text-(--gpnf-ambar);
+        }
+    }
+
+    & .fi-topbar-item-label {
+        @apply font-semibold text-white;
+    }
+}
+
+/* Menú lateral del móvil */
+.fi-sidebar {
+    @apply bg-(--gpnf-marino);
+}
+
+.fi-sidebar-item-label {
+    @apply text-white/85;
+}
+
+.fi-sidebar-item-btn > .fi-icon {
+    @apply text-white/60;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    @apply bg-white/10;
+
+    & > .fi-icon,
+    & > .fi-sidebar-item-label {
+        @apply text-(--gpnf-ambar);
+    }
+}
+
+/* Tarjetas más amigables */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+    @apply rounded-2xl;
+}
+
+.fi-header-heading {
+    @apply text-3xl;
+}

@@ -104,7 +104,7 @@ class CalcularInasistenciasTest extends TestCase
         $pnf = Pnf::factory()->create(['umbral_inasistencia_clases' => $umbral]);
         $curso = Curso::factory()->for(Seccion::factory()->for(Trayecto::factory()->for($pnf)))->create();
         $estudiante = Estudiante::factory()->for($pnf)->create();
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return [$curso, $estudiante];
     }

@@ -6,6 +6,7 @@ use App\Filament\App\Resources\Justificaciones\Pages\ListJustificaciones;
 use App\Filament\App\Resources\Justificaciones\Tables\JustificacionesTable;
 use App\Models\Justificacion;
 use App\Models\SesionClase;
+use App\Models\Tutoria;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -14,8 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
- * Justificaciones solicitadas por los estudiantes. El coordinador ve las de
- * todo el PNF; el docente, las de las sesiones de sus cursos.
+ * Justificaciones solicitadas por los estudiantes, de clases y de tutorías.
+ * El coordinador ve las de todo el PNF; el docente, las de sus cursos y de
+ * los proyectos que tutora (como tutor académico o técnico).
  */
 class JustificacionResource extends Resource
 {
@@ -50,8 +52,10 @@ class JustificacionResource extends Resource
         if ($user && ! $user->coordinaPnfActual()) {
             $query->whereHas('asistencia', fn (Builder $asistencias) => $asistencias->whereHasMorph(
                 'sesionable',
-                [SesionClase::class],
-                fn (Builder $sesiones) => $sesiones->whereHas('curso', fn (Builder $cursos) => $cursos->dictadosPor($user)),
+                [SesionClase::class, Tutoria::class],
+                fn (Builder $sesiones, string $tipo) => $tipo === Tutoria::class
+                    ? $sesiones->whereHas('proyecto', fn (Builder $proyectos) => $proyectos->tutoradosPor($user))
+                    : $sesiones->whereHas('curso', fn (Builder $cursos) => $cursos->dictadosPor($user)),
             ));
         }
 

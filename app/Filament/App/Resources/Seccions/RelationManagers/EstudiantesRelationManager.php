@@ -6,13 +6,19 @@ use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Estudiantes inscritos en la sección. La lista de opciones solo incluye
  * estudiantes del PNF actual gracias al PnfScope.
+ *
+ * Al inscribir se puede inscribir también en todas las unidades curriculares
+ * de la sección; al retirar, el estudiante sale de ellas.
  */
 class EstudiantesRelationManager extends RelationManager
 {
@@ -50,14 +56,32 @@ class EstudiantesRelationManager extends RelationManager
                     ->attachAnother(false)
                     ->successNotificationTitle('Estudiantes inscritos')
                     ->multiple()
-                    ->recordSelectSearchColumns(['cedula', 'nombres', 'apellidos']),
+                    ->recordSelectSearchColumns(['cedula', 'nombres', 'apellidos'])
+                    ->schema(fn (AttachAction $action): array => [
+                        $action->getRecordSelect(),
+                        Toggle::make('inscribir_en_cursos')
+                            ->label('Inscribir también en todas las unidades curriculares de la sección')
+                            ->helperText('Desactívalo si cursarán solo algunas; luego puedes inscribirlos curso por curso.')
+                            ->default(true),
+                    ])
+                    ->after(function (array $data): void {
+                        if ($data['inscribir_en_cursos'] ?? false) {
+                            $this->getOwnerRecord()->inscribirEnSusCursos(array_map('intval', (array) $data['recordId']));
+                        }
+                    }),
             ])
             ->recordActions([
-                DetachAction::make()->label('Retirar'),
+                DetachAction::make()
+                    ->label('Retirar')
+                    ->modalDescription('También se retira de las unidades curriculares de la sección. Su historial de asistencia se conserva.')
+                    ->after(fn (Model $record) => $this->getOwnerRecord()->retirarDeSusCursos([$record->getKey()])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make()->label('Retirar seleccionados'),
+                    DetachBulkAction::make()
+                        ->label('Retirar seleccionados')
+                        ->modalDescription('También se retiran de las unidades curriculares de la sección. Su historial de asistencia se conserva.')
+                        ->after(fn (Collection $records) => $this->getOwnerRecord()->retirarDeSusCursos($records->modelKeys())),
                 ]),
             ]);
     }

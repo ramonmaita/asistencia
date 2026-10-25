@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\AgregarIntegrantes;
 use App\Actions\GenerarSesionesClase;
 use App\Actions\RegistrarAsistencias;
 use App\Enums\DiaSemana;
@@ -9,12 +10,14 @@ use App\Enums\EstadoAsistencia;
 use App\Enums\ModalidadProyecto;
 use App\Enums\RolPnf;
 use App\Enums\Turno;
+use App\Enums\VeredictoProyecto;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Feriado;
 use App\Models\Justificacion;
 use App\Models\Periodo;
 use App\Models\Pnf;
+use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\Sede;
 use App\Models\SesionClase;
@@ -33,6 +36,7 @@ use Illuminate\Support\Facades\Storage;
  *  - Superadmin:   admin@gestionpnf.test        → /admin y /app
  *  - Coordinador:  coordinador@gestionpnf.test  → /app (PNF Informática)
  *  - Docente:      docente@gestionpnf.test      → /app (Informática y Administración)
+ *  - Tutor técnico: tecnico@gestionpnf.test     → /app (Informática, tutor técnico de sus proyectos)
  *  - Estudiante:   cédula 30111222              → /estudiante (Informática)
  */
 class DatabaseSeeder extends Seeder
@@ -79,6 +83,12 @@ class DatabaseSeeder extends Seeder
         $docente->pnfs()->attach($informatica, ['rol' => RolPnf::Docente]);
         $docente->pnfs()->attach($administracion, ['rol' => RolPnf::Docente]);
 
+        $tecnico = User::factory()->create([
+            'name' => 'Docente Técnico',
+            'email' => 'tecnico@gestionpnf.test',
+        ]);
+        $tecnico->pnfs()->attach($informatica, ['rol' => RolPnf::Docente]);
+
         $maria = Estudiante::factory()->for($informatica)->create([
             'cedula' => '30111222',
             'nombres' => 'María',
@@ -97,6 +107,55 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->registrarAsistencias($docente, $maria);
+        $this->crearProyectos($docente, $tecnico, $maria);
+    }
+
+    /**
+     * Arma grupos de proyecto en los cursos de la UC Proyecto con sus
+     * tutorías semanales (hasta ayer) y la asistencia de los integrantes.
+     * En Informática el tutor técnico es "Docente Técnico". El primer grupo
+     * (el de María) ya tiene un veredicto.
+     */
+    private function crearProyectos(User $docente, User $tecnico, Estudiante $maria): void
+    {
+        $registrar = app(RegistrarAsistencias::class);
+        $titulos = ['Sistema de control de inventario para el consejo comunal', 'Plataforma de citas para el ambulatorio', 'Registro digital de la biblioteca escolar', 'Gestión de la cooperativa de transporte'];
+
+        foreach (Curso::query()->deProyecto()->with(['estudiantes', 'seccion.trayecto', 'seccion.periodo'])->get() as $curso) {
+            $trayecto = $curso->seccion->trayecto;
+            $tutorTecnico = $tecnico->pnfs->contains('id', $curso->pnf_id) ? $tecnico : null;
+            $estudiantes = $curso->estudiantes->sortByDesc(fn (Estudiante $estudiante): bool => $estudiante->is($maria))->values();
+
+            foreach ($estudiantes->chunk($trayecto->max_integrantes)->take(3) as $numero => $grupo) {
+                $proyecto = Proyecto::create([
+                    'pnf_id' => $curso->pnf_id,
+                    'curso_id' => $curso->id,
+                    'titulo' => $titulos[$numero % count($titulos)],
+                    'comunidad' => 'Consejo comunal '.fake()->lastName(),
+                    'tutor_tecnico_id' => $tutorTecnico?->id,
+                    'tutor_institucional' => fake()->name(),
+                    'tutor_institucional_contacto' => '0414-'.fake()->numerify('#######'),
+                ]);
+                app(AgregarIntegrantes::class)->handle($proyecto, $grupo->modelKeys());
+
+                for ($fecha = $curso->seccion->periodo->fecha_inicio->copy()->next('Thursday'); $fecha->lt(today()); $fecha->addWeek()) {
+                    $tutoria = $proyecto->tutorias()->create([
+                        'pnf_id' => $curso->pnf_id,
+                        'fecha' => $fecha->toDateString(),
+                        'hora_inicio' => '14:00',
+                        'hora_fin' => '15:30',
+                        'tema' => fake()->randomElement(['Diagnóstico comunitario', 'Plan de acción', 'Revisión del prototipo', 'Avance del informe']),
+                    ]);
+
+                    $registrar->handle($tutoria, $grupo->mapWithKeys(fn (Estudiante $estudiante): array => [
+                        $estudiante->id => fake()->boolean(12) ? EstadoAsistencia::Ausente : EstadoAsistencia::Presente,
+                    ])->all(), $docente);
+                }
+            }
+        }
+
+        Proyecto::query()->conIntegrante($maria)->first()?->integrantes()->whereBelongsTo($maria)->first()
+            ?->registrarVeredicto(VeredictoProyecto::Aprobado, $docente, 'Cumplió con todas las entregas.');
     }
 
     /**
@@ -151,6 +210,8 @@ class DatabaseSeeder extends Seeder
     /**
      * Crea los trayectos con sus unidades curriculares, una sección del
      * Trayecto I con los estudiantes inscritos y sus cursos con horario.
+     * Casi todos cursan todas las unidades de la sección; los tres primeros
+     * (sin contar a María) solo cursan la primera, como quien va atrasado.
      *
      * @param  Collection<int, Estudiante>  $estudiantes
      * @param  array<string, array<int, array{0: string, 1: string, 2?: bool}>>  $plan
@@ -194,6 +255,7 @@ class DatabaseSeeder extends Seeder
                 'turno' => Turno::Manana,
             ]);
             $seccion->estudiantes()->attach($estudiantes->modelKeys());
+            $parciales = $estudiantes->reject(fn (Estudiante $estudiante): bool => $estudiante->cedula === '30111222')->take(3);
 
             foreach ($trayecto->unidadesCurriculares()->withoutGlobalScopes()->get() as $indice => $unidadCurricular) {
                 $curso = Curso::create([
@@ -202,6 +264,7 @@ class DatabaseSeeder extends Seeder
                     'unidad_curricular_id' => $unidadCurricular->id,
                 ]);
                 $curso->docentes()->attach($docente);
+                $curso->estudiantes()->attach(($indice === 0 ? $estudiantes : $estudiantes->diff($parciales))->modelKeys());
                 $curso->horarios()->create([
                     'dia_semana' => DiaSemana::from($indice + 1),
                     'hora_inicio' => '08:00',

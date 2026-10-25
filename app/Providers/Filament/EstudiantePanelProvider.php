@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Estudiante\Pages\Auth\Login;
 use App\Http\Middleware\EstablecerPnfDelEstudiante;
 use App\Http\Middleware\ExigirCambioDeContrasena;
+use App\Support\Marca;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -35,9 +36,16 @@ class EstudiantePanelProvider extends PanelProvider
             ->authGuard('estudiante')
             ->login(Login::class)
             ->brandName('Gestión PNF · Estudiantes')
+            ->brandLogo(fn () => view('filament.logo', ['subtitulo' => 'Estudiantes']))
+            ->brandLogoHeight('2.75rem')
+            ->favicon(asset('images/favicon-upt.png'))
+            ->font('Source Sans 3')
+            ->viteTheme('resources/css/filament/estudiante/theme.css')
+            ->topNavigation()
             ->databaseNotifications()
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => Marca::TRANSICION,
+                'warning' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Estudiante/Resources'), for: 'App\Filament\Estudiante\Resources')
             ->discoverPages(in: app_path('Filament/Estudiante/Pages'), for: 'App\Filament\Estudiante\Pages')

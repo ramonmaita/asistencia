@@ -10,9 +10,12 @@ use App\Models\Asistencia;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Pnf;
+use App\Models\Proyecto;
 use App\Models\Seccion;
 use App\Models\SesionClase;
 use App\Models\Trayecto;
+use App\Models\Tutoria;
+use App\Models\UnidadCurricular;
 use App\Models\User;
 use App\Support\PnfActual;
 use Filament\Actions\Testing\TestAction;
@@ -101,6 +104,30 @@ class ReportesAsistenciaTest extends TestCase
             ->assertFileDownloaded('auditoria-asistencias.xlsx');
     }
 
+    public function test_la_auditoria_incluye_las_tutorias_y_las_filtra_por_tipo_y_curso(): void
+    {
+        [$curso] = $this->cursoConDocente();
+        $clase = $this->asistenciaEl($curso, '2026-10-05');
+        $proyecto = Proyecto::factory()->for(Curso::factory()->for($curso->seccion)->for(UnidadCurricular::factory()->for($curso->seccion->trayecto)->state(['es_proyecto' => true])))->create();
+        $tutoria = Asistencia::factory()->for(Tutoria::factory()->for($proyecto)->realizada()->state(['fecha' => '2026-10-06']), 'sesionable')->create();
+
+        $this->entrarAlPanel(User::factory()->coordinadorDe($curso->pnf)->create(), $curso->pnf);
+
+        Livewire::test(AuditoriaAsistencias::class)
+            ->filterTable('periodo', null)
+            ->assertCanSeeTableRecords([$clase, $tutoria])
+            ->filterTable('tipo', 'tutoria')
+            ->assertCanSeeTableRecords([$tutoria])
+            ->assertCanNotSeeTableRecords([$clase])
+            ->filterTable('tipo', null)
+            ->filterTable('curso', $proyecto->curso_id)
+            ->filterTable('fecha', ['desde' => '2026-10-06', 'hasta' => '2026-10-06'])
+            ->assertCanSeeTableRecords([$tutoria])
+            ->assertCanNotSeeTableRecords([$clase])
+            ->callAction(TestAction::make('exportarExcel')->table())
+            ->assertFileDownloaded('auditoria-asistencias.xlsx');
+    }
+
     /**
      * @return array{0: Curso, 1: User}
      */
@@ -119,7 +146,7 @@ class ReportesAsistenciaTest extends TestCase
     private function inscrito(Curso $curso, string $apellidos): Estudiante
     {
         $estudiante = Estudiante::factory()->for($curso->pnf)->create(['apellidos' => $apellidos]);
-        $curso->seccion->estudiantes()->attach($estudiante);
+        $curso->estudiantes()->attach($estudiante);
 
         return $estudiante;
     }

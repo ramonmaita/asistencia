@@ -3,18 +3,17 @@
 namespace App\Actions;
 
 use App\Enums\EstadoAsistencia;
-use App\Enums\EstadoSesion;
 use App\Enums\MetodoAsistencia;
 use App\Models\Asistencia;
-use App\Models\SesionClase;
+use App\Models\Contracts\Sesionable;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * Guarda la asistencia de los estudiantes a una sesión de clase y la marca
- * como realizada. Sirve para el registro manual y, en la Fase 5, para el
- * registro por QR (un solo estudiante con otro método).
+ * Guarda la asistencia de los estudiantes a una sesión de clase o a una
+ * tutoría y la marca como realizada. Sirve para el registro manual y, en la
+ * Fase 5, para el registro por QR (un solo estudiante con otro método).
  *
  * Solo se actualizan los registros cuyo estado cambia, de modo que el método,
  * el autor y la hora de los demás se conservan.
@@ -24,13 +23,13 @@ class RegistrarAsistencias
     /**
      * @param  array<int, EstadoAsistencia>  $estados  Estado por id de estudiante.
      */
-    public function handle(SesionClase $sesion, array $estados, ?User $registrador, MetodoAsistencia $metodo = MetodoAsistencia::Manual): void
+    public function handle(Sesionable $sesion, array $estados, ?User $registrador, MetodoAsistencia $metodo = MetodoAsistencia::Manual): void
     {
-        $inscritos = $sesion->curso->estudiantes()->pluck('estudiantes.id')->all();
+        $inscritos = $sesion->participantes()->pluck('estudiantes.id')->all();
         $ajenos = array_diff(array_keys($estados), $inscritos);
 
         if ($ajenos !== []) {
-            throw new InvalidArgumentException('Hay estudiantes que no están inscritos en la sección del curso.');
+            throw new InvalidArgumentException('Hay estudiantes que no están convocados a esta sesión.');
         }
 
         DB::transaction(function () use ($sesion, $estados, $registrador, $metodo) {
@@ -56,9 +55,7 @@ class RegistrarAsistencias
                 );
             }
 
-            if ($sesion->estado !== EstadoSesion::Realizada) {
-                $sesion->update(['estado' => EstadoSesion::Realizada]);
-            }
+            $sesion->marcarRealizada();
         });
     }
 
@@ -67,11 +64,11 @@ class RegistrarAsistencias
      *
      * @return array<int, EstadoAsistencia>
      */
-    public function estadosIniciales(SesionClase $sesion): array
+    public function estadosIniciales(Sesionable $sesion): array
     {
         $registrados = $sesion->asistencias()->pluck('estado', 'estudiante_id');
 
-        return $sesion->curso->estudiantes()
+        return $sesion->participantes()
             ->pluck('estudiantes.id')
             ->mapWithKeys(fn (int $id): array => [$id => $registrados->get($id, EstadoAsistencia::Presente)])
             ->all();
