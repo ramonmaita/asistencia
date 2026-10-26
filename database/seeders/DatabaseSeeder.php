@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Storage;
  *  - Coordinador:  coordinador@gestionpnf.test  → /app (PNF Informática)
  *  - Docente:      docente@gestionpnf.test      → /app (Informática y Administración)
  *  - Tutor técnico: tecnico@gestionpnf.test     → /app (Informática, tutor técnico de sus proyectos)
+ *  - Administrativo: administrativo@gestionpnf.test → /app (Informática: estudiantes, personal y reportes)
  *  - Estudiante:   cédula 30111222              → /estudiante (Informática)
  */
 class DatabaseSeeder extends Seeder
@@ -90,6 +91,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'tecnico@gestionpnf.test',
         ]);
         $tecnico->pnfs()->attach($informatica, ['rol' => RolPnf::Docente]);
+
+        User::factory()->administrativoDe($informatica)->create([
+            'name' => 'Administrativo Informática',
+            'email' => 'administrativo@gestionpnf.test',
+        ]);
 
         $maria = Estudiante::factory()->for($informatica)->create([
             'cedula' => '30111222',

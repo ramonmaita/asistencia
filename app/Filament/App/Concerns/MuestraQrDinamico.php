@@ -3,8 +3,11 @@
 namespace App\Filament\App\Concerns;
 
 use App\Actions\CerrarAsistencia;
+use App\Actions\RegistrarAsistenciaPorQr;
+use App\Enums\MetodoAsistencia;
 use App\Models\Asistencia;
 use App\Models\Contracts\Sesionable;
+use App\Models\Estudiante;
 use App\Support\CodigoQrDinamico;
 use App\Support\VentanaDeAsistencia;
 use chillerlan\QRCode\Output\QROutputInterface;
@@ -14,11 +17,13 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Página para proyectar en el aula el QR dinámico de una sesión. Se
- * refresca sola (wire:poll) para mostrar el código vigente y quiénes se
- * van registrando; al cerrar, los que faltan quedan ausentes.
+ * Página de la toma por QR de una sesión: proyecta en el aula el QR
+ * dinámico o lee con la cámara los carnets de los estudiantes. Se refresca
+ * sola (wire:poll) para mostrar el código vigente y quiénes se van
+ * registrando; al cerrar, los que faltan quedan ausentes.
  */
 trait MuestraQrDinamico
 {
@@ -68,6 +73,34 @@ trait MuestraQrDinamico
         ])))->render($codigo['codigo']);
 
         return ['imagen' => $imagen, 'expira_at' => $codigo['expira_at']->toIso8601String(), 'segundos' => $codigo['segundos']];
+    }
+
+    /**
+     * El docente lee con la cámara el QR del carnet (impreso o virtual) de
+     * un estudiante; responde al lector con el resultado.
+     *
+     * @return array{exito: bool, mensaje: string}
+     */
+    public function registrarCarnet(string $contenido): array
+    {
+        $estudiante = Estudiante::delCarnet($contenido);
+
+        if (! $estudiante) {
+            return ['exito' => false, 'mensaje' => 'El código no es un carnet válido de este PNF.'];
+        }
+
+        try {
+            $resultado = app(RegistrarAsistenciaPorQr::class)->handle($this->sesionable(), $estudiante, MetodoAsistencia::QrDocente, auth()->user());
+        } catch (ValidationException $error) {
+            return ['exito' => false, 'mensaje' => collect($error->errors())->flatten()->first()];
+        }
+
+        return [
+            'exito' => true,
+            'mensaje' => $resultado['nueva']
+                ? "{$estudiante->nombre_completo}: {$resultado['asistencia']->estado->getLabel()}"
+                : "{$estudiante->nombre_completo} ya estaba registrado",
+        ];
     }
 
     public function convocados(): int

@@ -79,6 +79,27 @@ class QrDinamicoWebTest extends TestCase
         $this->assertDatabaseHas('asistencias', ['estudiante_id' => $faltante->id, 'estado' => 'ausente']);
     }
 
+    public function test_el_docente_registra_la_asistencia_leyendo_carnets_con_la_camara(): void
+    {
+        $this->travelTo('2026-10-20 08:30:00');
+        [$pnf, $sesion, $docente, $estudiante] = $this->escenario();
+        $deOtroPnf = Estudiante::factory()->create();
+
+        $this->actingAs($docente);
+        Filament::setCurrentPanel('app');
+        Filament::setTenant($pnf);
+        app(PnfActual::class)->establecer($pnf);
+
+        Livewire::test(QrDinamicoSesion::class, ['record' => $sesion->curso_id, 'sesion' => $sesion->id])
+            ->call('registrarCarnet', $estudiante->contenidoQr())
+            ->assertReturned(['exito' => true, 'mensaje' => "{$estudiante->nombre_completo}: Tardanza"])
+            ->call('registrarCarnet', $deOtroPnf->contenidoQr())
+            ->assertReturned(['exito' => false, 'mensaje' => 'El código no es un carnet válido de este PNF.']);
+
+        $this->assertDatabaseHas('asistencias', ['estudiante_id' => $estudiante->id, 'metodo' => 'qr_docente', 'registrado_por' => $docente->id]);
+        $this->assertDatabaseMissing('asistencias', ['estudiante_id' => $deOtroPnf->id]);
+    }
+
     public function test_el_tutor_proyecta_el_qr_de_la_tutoria(): void
     {
         $this->travelTo('2026-10-20 14:05:00');

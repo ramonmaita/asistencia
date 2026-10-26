@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Users;
 use App\Filament\Admin\Resources\Users\Pages\CreateUser;
 use App\Filament\Admin\Resources\Users\Pages\EditUser;
 use App\Filament\Admin\Resources\Users\Pages\ListUsers;
+use App\Filament\Admin\Resources\Users\RelationManagers\PnfsRelationManager;
 use App\Filament\Admin\Resources\Users\Schemas\UserForm;
 use App\Filament\Admin\Resources\Users\Tables\UsersTable;
 use App\Models\User;
@@ -13,18 +14,27 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
+/**
+ * Personal de la universidad (docentes, coordinadores y administrativos) y
+ * sus roles en cada PNF.
+ */
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $modelLabel = 'docente';
+    protected static ?string $modelLabel = 'usuario';
 
-    protected static ?string $pluralModelLabel = 'docentes';
+    protected static ?string $pluralModelLabel = 'personal';
+
+    protected static ?string $navigationLabel = 'Personal';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Usuarios';
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
@@ -41,7 +51,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PnfsRelationManager::class,
         ];
     }
 

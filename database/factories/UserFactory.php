@@ -46,6 +46,11 @@ class UserFactory extends Factory
         return $this->afterCreating(fn (User $user) => $user->pnfs()->attach($pnf, ['rol' => RolPnf::Docente]));
     }
 
+    public function administrativoDe(Pnf $pnf): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->pnfs()->attach($pnf, ['rol' => RolPnf::Administrativo]));
+    }
+
     public function superadmin(): static
     {
         return $this->state(fn (array $attributes) => [

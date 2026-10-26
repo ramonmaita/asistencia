@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\EstadoSesion;
+use App\Enums\RolPnf;
 use App\Models\User;
 use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
@@ -22,9 +23,12 @@ class SesionClasePolicy extends GestionadaPorCoordinador
         return $this->gestiona($user, $sesion);
     }
 
+    /**
+     * El administrativo no dicta clases, así que no crea sesiones.
+     */
     public function create(User $user): bool
     {
-        return $this->perteneceAlPnfActual($user);
+        return $this->perteneceAlPnfActual($user) && $user->rolEnPnfActual() !== RolPnf::Administrativo;
     }
 
     public function update(User $user, Model $sesion): bool

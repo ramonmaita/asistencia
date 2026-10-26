@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Widgets;
 
+use App\Enums\RolPnf;
 use App\Filament\App\Resources\Cursos\CursoResource;
 use App\Models\SesionClase;
 use Filament\Actions\Action;
@@ -22,6 +23,14 @@ class ClasesDeHoy extends TableWidget
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Clases de hoy';
+
+    /**
+     * El administrativo no dicta clases.
+     */
+    public static function canView(): bool
+    {
+        return auth()->user()?->rolEnPnfActual() !== RolPnf::Administrativo;
+    }
 
     public function table(Table $table): Table
     {

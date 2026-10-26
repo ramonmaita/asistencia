@@ -7,25 +7,26 @@ use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * El coordinador gestiona los cursos; el docente ve los que dicta.
+ * El coordinador gestiona los cursos; el administrativo los ve todos (e
+ * inscribe estudiantes) y el docente ve los que dicta.
  */
 class CursoPolicy extends GestionadaPorCoordinador
 {
     public function viewAny(User $user): bool
     {
-        return $user->coordinaPnfActual()
+        return $user->administraPnfActual()
             || $user->pnfs->contains('id', app(PnfActual::class)->id());
     }
 
     public function view(User $user, Model $curso): bool
     {
-        return $this->coordinaPnfDe($user, $curso)
+        return $this->administraPnfDe($user, $curso)
             || ($curso->pnf_id === app(PnfActual::class)->id() && $curso->docentes()->whereKey($user->getKey())->exists());
     }
 
     /**
-     * El coordinador y los docentes del curso inscriben y retiran estudiantes
-     * (el docente carga la lista que le da el sistema académico).
+     * El coordinador, el administrativo y los docentes del curso inscriben y
+     * retiran estudiantes (cargan la lista que da el sistema académico).
      */
     public function gestionarInscripcion(User $user, Model $curso): bool
     {

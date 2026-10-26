@@ -105,8 +105,7 @@ class SesionController extends Controller
         $sesion = $this->sesion($tipo, $sesion);
         Gate::authorize('registrarAsistencia', $sesion);
 
-        $token = str_starts_with($request->string('qr'), 'GPNF:') ? substr($request->string('qr'), 5) : null;
-        $estudiante = $token ? Estudiante::firstWhere('qr_token', $token) : null;
+        $estudiante = Estudiante::delCarnet($request->string('qr'));
 
         if (! $estudiante) {
             throw ValidationException::withMessages(['qr' => 'El carnet no es válido o no pertenece a este PNF.']);

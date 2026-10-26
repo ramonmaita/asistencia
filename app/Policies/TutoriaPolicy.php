@@ -3,12 +3,14 @@
 namespace App\Policies;
 
 use App\Enums\EstadoSesion;
+use App\Enums\RolPnf;
 use App\Models\User;
 use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Las tutorías las gestionan los tutores académico y técnico del proyecto o el coordinador.
+ * Las tutorías las gestionan los tutores académico y técnico del proyecto o
+ * el coordinador; el administrativo no las crea.
  */
 class TutoriaPolicy extends GestionadaPorCoordinador
 {
@@ -24,7 +26,7 @@ class TutoriaPolicy extends GestionadaPorCoordinador
 
     public function create(User $user): bool
     {
-        return $this->viewAny($user);
+        return $this->viewAny($user) && $user->rolEnPnfActual() !== RolPnf::Administrativo;
     }
 
     public function update(User $user, Model $tutoria): bool

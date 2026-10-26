@@ -39,7 +39,7 @@ class ProyectoResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return auth()->user()?->coordinaPnfActual() ? 'Proyectos' : 'Mis proyectos';
+        return auth()->user()?->administraPnfActual() ? 'Proyectos' : 'Mis proyectos';
     }
 
     public static function getEloquentQuery(): Builder
@@ -47,7 +47,7 @@ class ProyectoResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user && ! $user->coordinaPnfActual()) {
+        if ($user && ! $user->administraPnfActual()) {
             $query->tutoradosPor($user);
         }
 

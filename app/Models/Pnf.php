@@ -63,6 +63,11 @@ class Pnf extends Model implements HasName
         return $this->users()->wherePivot('rol', RolPnf::Docente);
     }
 
+    public function administrativos(): BelongsToMany
+    {
+        return $this->users()->wherePivot('rol', RolPnf::Administrativo);
+    }
+
     public function estudiantes(): HasMany
     {
         return $this->hasMany(Estudiante::class);

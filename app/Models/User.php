@@ -74,6 +74,26 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             && $this->pnfs->firstWhere('id', $pnfId)?->pivot->rol === RolPnf::Coordinador;
     }
 
+    /**
+     * Indica si gestiona los datos del PNF de la petición en curso:
+     * coordinador, administrativo o superadmin.
+     */
+    public function administraPnfActual(): bool
+    {
+        if ($this->is_superadmin) {
+            return true;
+        }
+
+        return in_array($this->rolEnPnfActual(), [RolPnf::Coordinador, RolPnf::Administrativo], true);
+    }
+
+    public function rolEnPnfActual(): ?RolPnf
+    {
+        $pnfId = app(PnfActual::class)->id();
+
+        return $pnfId === null ? null : $this->pnfs->firstWhere('id', $pnfId)?->pivot->rol;
+    }
+
     public function rolEn(Pnf $pnf): ?RolPnf
     {
         return $this->pnfs->firstWhere('id', $pnf->getKey())?->pivot->rol;

@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * El personal no crea ni edita justificaciones (las solicita el estudiante):
- * el docente de la sesión o el coordinador las ven y las revisan.
+ * el docente de la sesión o el coordinador las ven y las revisan; el
+ * administrativo solo las consulta.
  */
 class JustificacionPolicy extends GestionadaPorCoordinador
 {
@@ -19,13 +20,12 @@ class JustificacionPolicy extends GestionadaPorCoordinador
 
     public function view(User $user, Model $justificacion): bool
     {
-        return $justificacion->pnf_id === app(PnfActual::class)->id()
-            && $justificacion->asistencia->sesionable->esGestionadaPor($user);
+        return $this->esDeSuSesion($user, $justificacion) || $this->administraPnfDe($user, $justificacion);
     }
 
     public function revisar(User $user, Model $justificacion): bool
     {
-        return $this->view($user, $justificacion) && $justificacion->estaPendiente();
+        return $this->esDeSuSesion($user, $justificacion) && $justificacion->estaPendiente();
     }
 
     public function create(User $user): bool
@@ -46,5 +46,11 @@ class JustificacionPolicy extends GestionadaPorCoordinador
     public function deleteAny(User $user): bool
     {
         return false;
+    }
+
+    private function esDeSuSesion(User $user, Model $justificacion): bool
+    {
+        return $justificacion->pnf_id === app(PnfActual::class)->id()
+            && $justificacion->asistencia->sesionable->esGestionadaPor($user);
     }
 }

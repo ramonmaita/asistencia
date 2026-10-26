@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RolPnf;
 use App\Models\User;
 use App\Support\PnfActual;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * El coordinador gestiona todos los proyectos del PNF; el tutor académico
  * (docente de la UC Proyecto) gestiona los de sus cursos y el tutor técnico
- * solo los ve (y registra tutorías, ver TutoriaPolicy).
+ * solo los ve (y registra tutorías, ver TutoriaPolicy). El administrativo
+ * los consulta todos.
  */
 class ProyectoPolicy extends GestionadaPorCoordinador
 {
@@ -20,7 +22,7 @@ class ProyectoPolicy extends GestionadaPorCoordinador
 
     public function view(User $user, Model $proyecto): bool
     {
-        return $this->tutora($user, $proyecto);
+        return $this->tutora($user, $proyecto) || $this->administraPnfDe($user, $proyecto);
     }
 
     /**
@@ -28,7 +30,7 @@ class ProyectoPolicy extends GestionadaPorCoordinador
      */
     public function create(User $user): bool
     {
-        return $this->viewAny($user);
+        return $this->viewAny($user) && $user->rolEnPnfActual() !== RolPnf::Administrativo;
     }
 
     public function update(User $user, Model $proyecto): bool
