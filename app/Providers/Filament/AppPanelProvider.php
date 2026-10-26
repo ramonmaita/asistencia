@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\App\Resources\Cursos\Pages\QrDinamicoSesion;
+use App\Filament\App\Resources\Proyectos\Pages\QrDinamicoTutoria;
 use App\Http\Middleware\EstablecerPnfDelPanel;
 use App\Models\Pnf;
 use App\Support\Marca;
@@ -13,12 +15,15 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Vite;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -46,6 +51,11 @@ class AppPanelProvider extends PanelProvider
                 EstablecerPnfDelPanel::class,
             ], isPersistent: true)
             ->databaseNotifications()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): HtmlString => app(Vite::class)('resources/js/lector-qr.js'),
+                scopes: [QrDinamicoSesion::class, QrDinamicoTutoria::class],
+            )
             ->colors([
                 'primary' => Marca::TRANSICION,
                 'warning' => Color::Amber,

@@ -72,6 +72,16 @@ class Estudiante extends Authenticatable implements FilamentUser, HasName
     }
 
     /**
+     * Estudiante dueño del contenido leído de un carnet, si lo hay.
+     */
+    public static function delCarnet(string $contenido): ?self
+    {
+        return str_starts_with($contenido, 'GPNF:')
+            ? static::firstWhere('qr_token', substr($contenido, 5))
+            : null;
+    }
+
+    /**
      * Invalida el QR anterior (p. ej. por pérdida del carnet).
      */
     public function regenerarQr(): void
