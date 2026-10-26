@@ -117,3 +117,11 @@
 .fi-simple-header .fi-logo {
     @apply text-(--gpnf-marino) dark:text-white;
 }
+
+/* Manual de ayuda: rutas y nombres de campos sin las comillas invertidas. */
+.fi-prose code {
+    &::before,
+    &::after {
+        content: none;
+    }
+}
