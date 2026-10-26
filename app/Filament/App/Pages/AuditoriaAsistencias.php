@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
 /**
- * Auditoría de asistencias del PNF para el coordinador: clases y tutorías,
+ * Auditoría de asistencias del PNF para el coordinador y el administrativo: clases y tutorías,
  * con filtros combinados por tipo, fecha, periodo, sección y curso.
  *
  * La consulta une las dos tablas de sesiones; fecha, hora y curso salen de
@@ -61,7 +61,7 @@ class AuditoriaAsistencias extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->coordinaPnfActual();
+        return (bool) auth()->user()?->administraPnfActual();
     }
 
     public function content(Schema $schema): Schema

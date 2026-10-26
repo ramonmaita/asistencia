@@ -49,7 +49,7 @@ class JustificacionResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user && ! $user->coordinaPnfActual()) {
+        if ($user && ! $user->administraPnfActual()) {
             $query->whereHas('asistencia', fn (Builder $asistencias) => $asistencias->whereHasMorph(
                 'sesionable',
                 [SesionClase::class, Tutoria::class],

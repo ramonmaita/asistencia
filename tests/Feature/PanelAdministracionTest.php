@@ -23,7 +23,7 @@ class PanelAdministracionTest extends TestCase
 
         $this->actingAs(User::factory()->superadmin()->create());
 
-        foreach (['pnfs', 'users', 'periodos', 'feriados', 'sedes'] as $recurso) {
+        foreach (['pnfs', 'users', 'estudiantes', 'periodos', 'feriados', 'sedes'] as $recurso) {
             $this->get("/admin/{$recurso}")->assertOk();
             $this->get("/admin/{$recurso}/create")->assertOk();
         }

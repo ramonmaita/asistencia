@@ -55,26 +55,7 @@ class EstudiantesTable
             ])
             ->recordActions([
                 EditAction::make(),
-                ActionGroup::make([
-                    Action::make('restablecerContrasena')
-                        ->label('Restablecer contraseña')
-                        ->icon(Heroicon::OutlinedKey)
-                        ->requiresConfirmation()
-                        ->modalDescription('La contraseña volverá a ser la cédula y deberá cambiarla al entrar.')
-                        ->action(function (Estudiante $record): void {
-                            $record->restablecerContrasena();
-                            Notification::make()->title('Contraseña restablecida')->success()->send();
-                        }),
-                    Action::make('regenerarQr')
-                        ->label('Regenerar QR')
-                        ->icon(Heroicon::OutlinedQrCode)
-                        ->requiresConfirmation()
-                        ->modalDescription('El carnet anterior dejará de funcionar. Úsalo si el estudiante perdió su carnet.')
-                        ->action(function (Estudiante $record): void {
-                            $record->regenerarQr();
-                            Notification::make()->title('QR regenerado')->success()->send();
-                        }),
-                ]),
+                static::accionesDeCuenta(),
             ])
             ->toolbarActions([
                 BulkAction::make('imprimirCarnets')
@@ -87,5 +68,34 @@ class EstudiantesTable
                         ['Content-Type' => 'application/pdf'],
                     )),
             ]);
+    }
+
+    /**
+     * Restablecer la contraseña y regenerar el QR del carnet.
+     */
+    public static function accionesDeCuenta(): ActionGroup
+    {
+        return ActionGroup::make([
+            Action::make('restablecerContrasena')
+                ->label('Restablecer contraseña')
+                ->icon(Heroicon::OutlinedKey)
+                ->authorize('update')
+                ->requiresConfirmation()
+                ->modalDescription('La contraseña volverá a ser la cédula y deberá cambiarla al entrar.')
+                ->action(function (Estudiante $record): void {
+                    $record->restablecerContrasena();
+                    Notification::make()->title('Contraseña restablecida')->success()->send();
+                }),
+            Action::make('regenerarQr')
+                ->label('Regenerar QR')
+                ->icon(Heroicon::OutlinedQrCode)
+                ->authorize('update')
+                ->requiresConfirmation()
+                ->modalDescription('El carnet anterior dejará de funcionar. Úsalo si el estudiante perdió su carnet.')
+                ->action(function (Estudiante $record): void {
+                    $record->regenerarQr();
+                    Notification::make()->title('QR regenerado')->success()->send();
+                }),
+        ]);
     }
 }

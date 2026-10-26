@@ -22,8 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
- * Cursos (UC dictada en una sección). El coordinador ve todos los del PNF;
- * el docente solo los que tiene asignados.
+ * Cursos (UC dictada en una sección). El coordinador y el administrativo
+ * ven todos los del PNF; el docente solo los que tiene asignados.
  */
 class CursoResource extends Resource
 {
@@ -37,7 +37,7 @@ class CursoResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return auth()->user()?->coordinaPnfActual() ? 'Cursos' : 'Mis cursos';
+        return auth()->user()?->administraPnfActual() ? 'Cursos' : 'Mis cursos';
     }
 
     public static function getEloquentQuery(): Builder
@@ -45,7 +45,7 @@ class CursoResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user && ! $user->coordinaPnfActual()) {
+        if ($user && ! $user->administraPnfActual()) {
             $query->dictadosPor($user);
         }
 

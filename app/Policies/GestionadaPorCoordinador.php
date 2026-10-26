@@ -8,18 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Política base para los catálogos de un PNF: solo el coordinador del PNF
- * actual (o el superadmin) los ve y los modifica.
+ * actual (o el superadmin) los modifica; el administrativo los consulta.
  */
 abstract class GestionadaPorCoordinador
 {
     public function viewAny(User $user): bool
     {
-        return $user->coordinaPnfActual();
+        return $user->administraPnfActual();
     }
 
     public function view(User $user, Model $modelo): bool
     {
-        return $this->coordinaPnfDe($user, $modelo);
+        return $this->administraPnfDe($user, $modelo);
     }
 
     public function create(User $user): bool
@@ -45,5 +45,10 @@ abstract class GestionadaPorCoordinador
     protected function coordinaPnfDe(User $user, Model $modelo): bool
     {
         return $modelo->pnf_id === app(PnfActual::class)->id() && $user->coordinaPnfActual();
+    }
+
+    protected function administraPnfDe(User $user, Model $modelo): bool
+    {
+        return $modelo->pnf_id === app(PnfActual::class)->id() && $user->administraPnfActual();
     }
 }
